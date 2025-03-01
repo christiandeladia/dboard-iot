@@ -1,0 +1,1091 @@
+[
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740816000,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.5,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740816300,
+        "voltages_avg": {
+            "L1": 221.0,
+            "L2": 220.1,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740816600,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.0,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740816900,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.4,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740817200,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.4,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740817500,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 221.0,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740817800,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.8,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740818100,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.6,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740818400,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.2,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740818700,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.3,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740819000,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.7,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740819300,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 221.0,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740819600,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.2,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740819900,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.8,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740820200,
+        "voltages_avg": {
+            "L1": 220.9,
+            "L2": 220.8,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740820500,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 221.0,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740820800,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.2,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740821100,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.1,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740821400,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.9,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740821700,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.9,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740822000,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.4,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740822300,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.7,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740822600,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.8,
+            "L3": 220.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740822900,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.9,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740823200,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.5,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740823500,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.6,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740823800,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.3,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740824100,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.6,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740824400,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.4,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740824700,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.8,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740825000,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.4,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740825300,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.4,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740825600,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.9,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740825900,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.1,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740826200,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.8,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740826500,
+        "voltages_avg": {
+            "L1": 220.9,
+            "L2": 220.3,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740826800,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.1,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740827100,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.4,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740827400,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.5,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740827700,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.9,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740828000,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.7,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740828300,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.7,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740828600,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.1,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740828900,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.8,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740829200,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.7,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740829500,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.1,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740829800,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.5,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740830100,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.1,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740830400,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.8,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740830700,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.1,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740831000,
+        "voltages_avg": {
+            "L1": 221.0,
+            "L2": 220.7,
+            "L3": 220.6
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740831300,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.9,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740831600,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.3,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740831900,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.9,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740832200,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 221.0,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740832500,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.1,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740832800,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.1,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740833100,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.2,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740833400,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.8,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740833700,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.3,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740834000,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.8,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740834300,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.2,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740834600,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.8,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740834900,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.2,
+            "L3": 220.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740835200,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.8,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740835500,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.7,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740835800,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.7,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740836100,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.1,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740836400,
+        "voltages_avg": {
+            "L1": 220.9,
+            "L2": 220.9,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740836700,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.1,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740837000,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.1,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740837300,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.7,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740837600,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.1,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740837900,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 221.0,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740838200,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.8,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740838500,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.8,
+            "L3": 220.1
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740838800,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.6,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740839100,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.5,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740839400,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.6,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740839700,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.5,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740840000,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.0,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740840300,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.5,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740840600,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.3,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740840900,
+        "voltages_avg": {
+            "L1": 220.9,
+            "L2": 220.4,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740841200,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.0,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740841500,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.5,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740841800,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.9,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740842100,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.6,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740842400,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.9,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740842700,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.4,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740843000,
+        "voltages_avg": {
+            "L1": 220.9,
+            "L2": 220.1,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740843300,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.8,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740843600,
+        "voltages_avg": {
+            "L1": 221.0,
+            "L2": 220.3,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740843900,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.7,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740844200,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.1,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740844500,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 221.0,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740844800,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.8,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740845100,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.6,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740845400,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.5,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740845700,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.2,
+            "L3": 220.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740846000,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.8,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740846300,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.9,
+            "L3": 220.3
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740846600,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.5,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740846900,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.6,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740847200,
+        "voltages_avg": {
+            "L1": 220.6,
+            "L2": 220.3,
+            "L3": 220.2
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740847500,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.9,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740847800,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.7,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740848100,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.7,
+            "L3": 221.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740848400,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.9,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740848700,
+        "voltages_avg": {
+            "L1": 220.3,
+            "L2": 220.8,
+            "L3": 220.4
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740849000,
+        "voltages_avg": {
+            "L1": 220.2,
+            "L2": 220.9,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740849300,
+        "voltages_avg": {
+            "L1": 220.8,
+            "L2": 220.5,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740849600,
+        "voltages_avg": {
+            "L1": 220.7,
+            "L2": 220.4,
+            "L3": 220.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740849900,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.9,
+            "L3": 220.5
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740850200,
+        "voltages_avg": {
+            "L1": 221.0,
+            "L2": 221.0,
+            "L3": 220.8
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740850500,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.6,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740850800,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.7,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740851100,
+        "voltages_avg": {
+            "L1": 220.0,
+            "L2": 220.8,
+            "L3": 220.9
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740851400,
+        "voltages_avg": {
+            "L1": 220.4,
+            "L2": 220.4,
+            "L3": 220.7
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740851700,
+        "voltages_avg": {
+            "L1": 220.5,
+            "L2": 220.6,
+            "L3": 220.0
+        }
+    },
+    {
+        "partner_id": "partner123",
+        "timestamp": 1740852000,
+        "voltages_avg": {
+            "L1": 220.1,
+            "L2": 220.4,
+            "L3": 220.5
+        }
+    }
+]

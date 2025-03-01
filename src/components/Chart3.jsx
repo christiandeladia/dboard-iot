@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -9,51 +9,30 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { FaSun, FaBolt, FaBatteryFull, FaChevronDown } from "react-icons/fa";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../Config";
+import DateRangePicker from "../components/DateRangePicker";
 
-const sampleData = [
-  { timestamp: 1740700800, voltages_avg: { L1: 220.5, L2: 220.7, L3: 221.0 } },
-  { timestamp: 1740704400, voltages_avg: { L1: 220.8, L2: 220.6, L3: 220.9 } },
-  { timestamp: 1740708000, voltages_avg: { L1: 221.0, L2: 220.8, L3: 221.1 } },
-  { timestamp: 1740711600, voltages_avg: { L1: 220.9, L2: 220.7, L3: 221.0 } },
-  { timestamp: 1740715200, voltages_avg: { L1: 220.6, L2: 220.4, L3: 220.8 } },
-  { timestamp: 1740718800, voltages_avg: { L1: 220.7, L2: 220.6, L3: 220.9 } },
-  { timestamp: 1740722400, voltages_avg: { L1: 220.1, L2: 220.8, L3: 221.2 } },
-  { timestamp: 1740726000, voltages_avg: { L1: 220.8, L2: 220.9, L3: 220.7 } },
-  { timestamp: 1740729600, voltages_avg: { L1: 220.6, L2: 220.7, L3: 220.8 } },
-  { timestamp: 1740733200, voltages_avg: { L1: 220.5, L2: 220.4, L3: 220.7 } },
-  { timestamp: 1740740400, voltages_avg: { L1: 220.9, L2: 220.7, L3: 221.2 } },
-  { timestamp: 1740744000, voltages_avg: { L1: 221.1, L2: 220.9, L3: 221.3 } },
-  { timestamp: 1740747600, voltages_avg: { L1: 221.0, L2: 220.8, L3: 221.1 } },
-  { timestamp: 1740751200, voltages_avg: { L1: 220.8, L2: 220.6, L3: 220.9 } },
-
-  { timestamp: 1740787200, voltages_avg: { "L1": 220.7, "L2": 220.4, "L3": 220.8 } },
-  { timestamp: 1735689600, voltages_avg: { "L1": 220.7, "L2": 220.4, "L3": 220.8 } },
-  { "timestamp": 1740614400, "voltages_avg": { "L1": 220.7, "L2": 220.4, "L3": 220.8 } },
-
-  {"timestamp": 1738800000, "voltages_avg": {"L1": 225.6, "L2": 219.7, "L3": 222.5}},
-  {"timestamp": 1738886400, "voltages_avg": {"L1": 215.0, "L2": 227.2, "L3": 216.7}},
-  {"timestamp": 1738972800, "voltages_avg": {"L1": 224.5, "L2": 219.8, "L3": 215.5}},
-  {"timestamp": 1739059200, "voltages_avg": {"L1": 228.0, "L2": 227.1, "L3": 217.4}},
-  {"timestamp": 1739145600, "voltages_avg": {"L1": 213.8, "L2": 224.4, "L3": 225.8}},
-  {"timestamp": 1739232000, "voltages_avg": {"L1": 215.1, "L2": 216.1, "L3": 213.1}},
-  {"timestamp": 1739318400, "voltages_avg": {"L1": 222.3, "L2": 217.8, "L3": 211.8}},
-  {"timestamp": 1739404800, "voltages_avg": {"L1": 212.4, "L2": 218.3, "L3": 229.1}},
-  {"timestamp": 1739491200, "voltages_avg": {"L1": 217.5, "L2": 213.5, "L3": 224.9}},
-  {"timestamp": 1739577600, "voltages_avg": {"L1": 220.7, "L2": 224.3, "L3": 224.3}},
-  {"timestamp": 1739664000, "voltages_avg": {"L1": 221.6, "L2": 223.0, "L3": 217.7}},
-  {"timestamp": 1739750400, "voltages_avg": {"L1": 228.7, "L2": 211.3, "L3": 214.5}},
-  {"timestamp": 1739836800, "voltages_avg": {"L1": 212.6, "L2": 217.4, "L3": 212.1}}
-
-
-
-];
-
-const Chart3 = () => {
-  const [timeframe, setTimeframe] = useState("Hourly");
-  const [selectedOption, setSelectedOption] = useState("Solar");
+const Chart3 = ({ selectedPlant }) => {
+  const [timeframe, setTimeframe] = useState("Day");
   const [isOpen, setIsOpen] = useState(false);
+  const [data, setData] = useState([]);
+  const [selectedDates, setSelectedDates] = useState(null);
 
+  // Fetch data from Firestore
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!selectedPlant) return;
+      const querySnapshot = await getDocs(collection(db, "meter_monitor_day"));
+      const fetchedData = querySnapshot.docs
+        .map((doc) => doc.data())
+        .filter((entry) => entry.plant_id === selectedPlant); // Filter by selected plant
 
+      setData(fetchedData);
+    };
+
+    fetchData();
+  }, [selectedPlant]);
 
   const groupAndAverage = (data, getKey) => {
     const grouped = groupBy(data, getKey);
@@ -82,6 +61,7 @@ const Chart3 = () => {
     });
     return map;
   };
+  
   // Compute min and max for Y-axis
   const { minY, maxY } = useMemo(() => {
   
@@ -93,11 +73,11 @@ const Chart3 = () => {
     let allValues = [];
   
     switch (timeframe) {
-      case "Hourly":
+      case "Day":
         const today = new Date();
         today.setHours(0, 0, 0, 0);
   
-        allValues = sampleData
+        allValues = data
           .filter(entry => {
             const entryDate = new Date(entry.timestamp * 1000);
             return entryDate.toDateString() === today.toDateString();
@@ -105,10 +85,10 @@ const Chart3 = () => {
           .flatMap(entry => Object.values(entry.voltages_avg));
         break;
   
-      case "Daily":
+      case "Month":
         const currentMonth = new Date().getMonth();
         const currentYear = new Date().getFullYear();
-        const dailyData = groupAndAverage(sampleData, (item) => {
+        const dailyData = groupAndAverage(data, (item) => {
           const date = new Date(item.timestamp * 1000);
           return date.toLocaleDateString(undefined, {
             month: "short",
@@ -123,9 +103,9 @@ const Chart3 = () => {
         allValues = getAllValues(dailyData);
         break;
   
-      case "Monthly":
+      case "Year":
         const thisYear = new Date().getFullYear();
-        const monthlyData = groupAndAverage(sampleData, (item) => {
+        const monthlyData = groupAndAverage(data, (item) => {
           const date = new Date(item.timestamp * 1000);
           return date.toLocaleDateString(undefined, {
             month: "long",
@@ -139,17 +119,8 @@ const Chart3 = () => {
         allValues = getAllValues(monthlyData);
         break;
   
-      case "Yearly":
-        const yearlyData = groupAndAverage(sampleData, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return `${date.getFullYear()}`;
-        });
-        
-        allValues = getAllValues(yearlyData);
-        break;
-  
       default:
-        allValues = sampleData.flatMap(entry => Object.values(entry.voltages_avg));
+        allValues = data.flatMap(entry => Object.values(entry.voltages_avg));
     }
   
     const min = Math.min(...allValues) - 0.2;
@@ -159,87 +130,68 @@ const Chart3 = () => {
       minY: parseFloat(min.toFixed(1)), // Limit to 1 decimal place
       maxY: parseFloat(max.toFixed(1)), // Limit to 1 decimal place
     };
-  }, [sampleData, timeframe]);
+  }, [data, timeframe]);
   
 
-  // Filter and group data by timeframe
-  const filteredChartData = useMemo(() => {
-
-  
-
+// Filter and group data by timeframe
+const filteredChartData = useMemo(() => {
+  switch (timeframe) {
+    case "Day":
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
     
-  
-    switch (timeframe) {
-      case "Hourly":
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to midnight
-      
-        return sampleData
-          .filter(entry => {
-            const entryDate = new Date(entry.timestamp * 1000);
-            return entryDate.toDateString() === today.toDateString();
-          })
-          .sort((a, b) => a.timestamp - b.timestamp) // Ensure sorting by timestamp
-          .map(entry => ({
-            timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString(undefined, {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            }),
-            L1: entry.voltages_avg.L1,
-            L2: entry.voltages_avg.L2,
-            L3: entry.voltages_avg.L3,
-          }));
-  
-          case "Daily":
-            const currentMonth = new Date().getMonth();
-            const currentYear = new Date().getFullYear();
-            
-            return groupAndAverage(sampleData, (item) => {
-              const date = new Date(item.timestamp * 1000);
-              return date.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-              });
-            })
-            .filter(entry => {
-              // const date = new Date(entry.timestamp);
-              const date = new Date(`${entry.timestamp} ${currentYear}`);
-
-              return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-            })
-            .sort((a, b) => 
-              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-            );
-          
-  
-      case "Monthly":
-        const thisYear = new Date().getFullYear();
-        return groupAndAverage(sampleData, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return date.toLocaleDateString(undefined, {
-            month: "long",
-          });
-        })
+      return data
         .filter(entry => {
-          const date = new Date(`01 ${entry.timestamp} ${thisYear}`);
-          return date.getFullYear() === thisYear;
+          const entryDate = new Date(entry.timestamp * 1000);
+          return entryDate.toDateString() === today.toDateString();
         })
-        .sort((a, b) => 
-          new Date(`01 ${a.timestamp} 2025`).getTime() - 
-          new Date(`01 ${b.timestamp} 2025`).getTime()
-        );
-  
-      case "Yearly":
-        return groupAndAverage(sampleData, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return `${date.getFullYear()}`;
-        }).sort((a, b) => a.timestamp - b.timestamp);
-  
-      default:
-        return sampleData;
-    }
-  }, [sampleData, timeframe]);
+        .sort((a, b) => a.timestamp - b.timestamp) 
+        .map(entry => ({
+          timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString("en-PH", {
+            timeZone: "Asia/Manila",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          
+          L1: entry.voltages_avg.L1,
+          L2: entry.voltages_avg.L2,
+          L3: entry.voltages_avg.L3,
+        }));
+
+    case "Month":
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      return groupAndAverage(data, (item) => {
+        const date = new Date(item.timestamp * 1000);
+        return date.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+      })
+      .filter(entry => {
+        // const date = new Date(entry.timestamp);
+        const date = new Date(`${entry.timestamp} ${currentYear}`);
+
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      })
+      .sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+
+    case "Year":
+      return groupAndAverage(data, (item) => {
+        const date = new Date(item.timestamp * 1000);
+        return date.toLocaleDateString(undefined, {
+          month: "long",
+        });
+      });
+
+    default:
+      return data;
+  }
+}, [data, timeframe]);
   
   const todayDate = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -253,36 +205,21 @@ const Chart3 = () => {
     { value: "Grid", label: "Grid", icon: <FaBolt className="text-blue-500 mr-2" /> },
     { value: "Battery", label: "Battery", icon: <FaBatteryFull className="text-green-500 mr-2" /> },
   ];
+  const [selectedOption, setSelectedOption] = useState(options[0]);
 
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       {/* Display today's date */}
-      <div className="text-lg font-semibold text-gray-700 text-center mb-4">
+      {/* <div className="text-lg font-semibold text-gray-700 text-center mb-4">
         {todayDate}
-      </div>
-      <div className="flex justify-between items-center mb-4">
-        <div className="inline-flex border border-gray-300 rounded-md overflow-hidden">
-          {["Hourly", "Daily", "Monthly", "Yearly"].map((label) => (
-            <button
-              key={label}
-              onClick={() => setTimeframe(label)}
-              className={`px-4 py-2 text-sm font-medium border-r last:border-0 transition-all 
-                ${
-                  timeframe === label
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-gray-900 hover:bg-gray-100"
-                }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      </div> */}
 
+      <div className="flex justify-between items-center mb-4">
          {/* Dropdown */}
          <div className="relative inline-block w-34">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center justify-between w-full px-4 py-2 border rounded-md bg-white text-gray-700"
+            className="flex items-center justify-between w-full px-4 py-2 bg-gray-50 border-gray-300 border shadow-md rounded-md text-gray-700"
           >
             <div className="flex items-center">
               {selectedOption.icon}
@@ -292,7 +229,7 @@ const Chart3 = () => {
           </button>
 
           {isOpen && (
-            <div className="absolute left-0 w-full mt-1 bg-white border rounded-md shadow-lg z-50">
+            <div className="absolute left-0 w-full mt-1 bg-gray-50 border-gray-300 border shadow-md rounded-md z-50">
               {options.map((option) => (
                 <div
                   key={option.value}
@@ -309,13 +246,40 @@ const Chart3 = () => {
             </div>
           )}
         </div>
+
+        <div className="flex items-center space-x-4">
+          <DateRangePicker onDateSelect={(dates) => setSelectedDates(dates)} />
+        
+        <div className="inline-flex border border-gray-300 rounded-md overflow-hidden">
+          {["Day", "Month", "Year"].map((label) => (
+            <button
+              key={label}
+              onClick={() => setTimeframe(label)}
+              className={`px-4 py-2 text-sm font-medium border-r last:border-0 transition-all 
+                ${
+                  timeframe === label
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-gray-900 hover:bg-gray-100"
+                }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        </div>
+
       </div>
+
+      {/* <div className="text-lg font-semibold text-gray-700 text-center mb-4">
+        Meter Monitoring - {selectedPlant ? `Plant: ${selectedPlant}` : "No Plant Selected"}
+      </div> */}
 
       <div className="flex-1">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={filteredChartData}>
             <CartesianGrid
               strokeDasharray="3 3"
+              vertical={false}
               stroke="black"
               strokeOpacity={0.2}
             />
