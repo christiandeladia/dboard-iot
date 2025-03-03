@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { addDays } from "date-fns";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css"; // Main styles
 import "react-date-range/dist/theme/default.css"; // Theme styles
@@ -9,52 +8,51 @@ const DateRangePicker = ({ onDateSelect }) => {
   const [dateRange, setDateRange] = useState([
     {
       startDate: new Date(),
-      endDate: new Date(), // End date is also today
+      endDate: new Date(),
       key: "selection",
     },
   ]);
-  
+
+  // Temporary state to store new selections before applying
+  const [tempDateRange, setTempDateRange] = useState(dateRange);
 
   const handleSelect = (ranges) => {
-    setDateRange([ranges.selection]);
+    setTempDateRange([ranges.selection]); // ✅ Store changes temporarily
   };
 
   const handleApply = () => {
     setShowModal(false);
+    setDateRange(tempDateRange); // ✅ Apply the changes only when clicking "Apply"
+
     if (onDateSelect) {
-      onDateSelect(dateRange[0]);
+      onDateSelect([
+        Math.floor(tempDateRange[0].startDate.getTime() / 1000),
+        Math.floor(tempDateRange[0].endDate.getTime() / 1000),
+      ]);
     }
   };
-  const defaultName = new Date().toDateString();
+
   return (
     <div className="flex flex-col items-center">
       {/* Button to Open Modal */}
-
-
       <button
-  onClick={() => setShowModal(true)}
-  className="bg-gray-50 text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition border-gray-300 border shadow-md"
->
-  📆 {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString()
-    ? dateRange[0].startDate.toDateString()  // Show only one date if they are the same
-    : `${dateRange[0].startDate.toDateString()} - ${dateRange[0].endDate.toDateString()}`}
-</button>
-
-
-
-
+        onClick={() => setShowModal(true)}
+        className="bg-gray-50 text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition border-gray-300 border shadow-md"
+      >
+        📆 {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString()
+          ? dateRange[0].startDate.toDateString()
+          : `${dateRange[0].startDate.toDateString()} - ${dateRange[0].endDate.toDateString()}`}
+      </button>
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-auto  flex items-center justify-center z-50 bottom-30">
-          <div className="bg-gray-100 p-6 rounded-lg shadow-lg ">
-            {/* <h2 className="text-lg font-semibold mb-4 text-gray-900">📅 Pick a Date Range</h2> */}
-
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-gray-100 p-6 rounded-lg shadow-lg">
             {/* Date Range Picker */}
             <DateRange
               onChange={handleSelect}
               moveRangeOnFirstSelection={false}
-              ranges={dateRange}
+              ranges={tempDateRange} // ✅ Use temp state
               months={2}
               direction="horizontal"
               preventSnapRefocus={true}

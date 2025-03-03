@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { auth, db} from "../Config";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import LineChartComponent from "./Chart_old";
-import Chart from "./Chart2";
+
+import MainChart from "./MainChart";
 import Chart3 from "./Chart3";
 import Navbar from "./Navbar";
 
@@ -54,10 +54,9 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="flex flex-col justify-center items-center ">
-        <h2 className="text-2xl font-semibold mb-3 mt-9 text-left w-full max-w-11/12">Dashboard</h2>
-        {/* <LineChartComponent /> 
-        <Chart />  */}
-        <Chart3 selectedPlant={selectedPlant} /> 
+        <h2 className="text-2xl font-semibold mb-3 mt-9 text-left w-full max-w-11/12"></h2>
+        <MainChart selectedPlant={selectedPlant} /> 
+        {/* <Chart3 selectedPlant={selectedPlant} />  */}
       </main>
     </div>
   );

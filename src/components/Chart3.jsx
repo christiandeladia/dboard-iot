@@ -135,17 +135,34 @@ const Chart3 = ({ selectedPlant }) => {
 
 // Filter and group data by timeframe
 const filteredChartData = useMemo(() => {
+  if (!data.length) return [];
+
+  let startTimestamp, endTimestamp;
+
+  if (selectedDates && selectedDates.length === 2) {
+    const startDate = new Date(selectedDates[0] * 1000); // Convert to JS Date
+    const endDate = new Date(selectedDates[1] * 1000);
+
+    // Ensure we cover the entire day
+    startTimestamp = Math.floor(startDate.setHours(0, 0, 0, 0) / 1000);
+    endTimestamp = Math.floor(endDate.setHours(23, 59, 59, 999) / 1000);
+  } else {
+    // Default to today's data if no range is selected
+    const today = new Date();
+    startTimestamp = Math.floor(today.setHours(0, 0, 0, 0) / 1000);
+    endTimestamp = Math.floor(today.setHours(23, 59, 59, 999) / 1000);
+  }
+
+  // Filter data within the full date range
+  const filteredData = data.filter(
+    entry => entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp
+  );
+
+  // Apply grouping based on timeframe selection
   switch (timeframe) {
     case "Day":
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-    
-      return data
-        .filter(entry => {
-          const entryDate = new Date(entry.timestamp * 1000);
-          return entryDate.toDateString() === today.toDateString();
-        })
-        .sort((a, b) => a.timestamp - b.timestamp) 
+      return filteredData
+        .sort((a, b) => a.timestamp - b.timestamp)
         .map(entry => ({
           timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString("en-PH", {
             timeZone: "Asia/Manila",
@@ -153,46 +170,32 @@ const filteredChartData = useMemo(() => {
             minute: "2-digit",
             hour12: true,
           }),
-          
+          timestamp_unix: entry.timestamp,
           L1: entry.voltages_avg.L1,
           L2: entry.voltages_avg.L2,
           L3: entry.voltages_avg.L3,
         }));
 
     case "Month":
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
-      
-      return groupAndAverage(data, (item) => {
+      return groupAndAverage(filteredData, (item) => {
         const date = new Date(item.timestamp * 1000);
         return date.toLocaleDateString(undefined, {
           month: "short",
           day: "numeric",
         });
-      })
-      .filter(entry => {
-        // const date = new Date(entry.timestamp);
-        const date = new Date(`${entry.timestamp} ${currentYear}`);
-
-        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-      })
-      .sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
+      }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     case "Year":
-      return groupAndAverage(data, (item) => {
+      return groupAndAverage(filteredData, (item) => {
         const date = new Date(item.timestamp * 1000);
-        return date.toLocaleDateString(undefined, {
-          month: "long",
-        });
+        return date.toLocaleDateString(undefined, { month: "long" });
       });
 
     default:
-      return data;
+      return filteredData;
   }
-}, [data, timeframe]);
-  
+}, [data, timeframe, selectedDates]);
+
   const todayDate = new Date().toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
@@ -206,6 +209,68 @@ const filteredChartData = useMemo(() => {
     { value: "Battery", label: "Battery", icon: <FaBatteryFull className="text-green-500 mr-2" /> },
   ];
   const [selectedOption, setSelectedOption] = useState(options[0]);
+
+  const CustomTooltip = ({ active, payload }) => {
+    if (!active || !payload || payload.length === 0) return null;
+  
+    // Extract timestamp from the first payload item
+    const dataPoint = payload[0]?.payload;
+    if (!dataPoint || !dataPoint.timestamp) {
+      console.log("❌ No timestamp found in payload:", payload);
+      return null;
+    }
+  
+    // Convert Unix timestamp (seconds) to Date
+    const timestampMs = dataPoint.timestamp_unix * 1000; // Convert to milliseconds
+    const formattedDate = new Date(timestampMs).toLocaleString("en-PH", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    console.log("🔍 Full Payload:", payload[0]?.payload);
+    console.log("🕒 Raw Timestamp:", payload[0]?.payload?.timestamp_unix);
+    
+    // Log timestamp and formatted date for debugging
+    console.log("🕒 Raw Timestamp (seconds):", dataPoint.timestamp_unix);
+    console.log("📆 Converted Timestamp (ms):", timestampMs);
+    console.log("✅ Formatted Date:", formattedDate);
+  
+    return (
+      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+        <p className="text-gray-700 font-semibold">{formattedDate}</p>
+        {payload.map((item, index) => (
+          <p key={index} className="text-gray-600">
+            <span className="font-semibold" style={{ color: item.color }}>
+              {item.name}
+            </span>
+            : {item.value} V
+          </p>
+        ))}
+      </div>
+    );
+  };
+  
+  
+  
+  const formatXAxis = (timestamps) => {
+    if (!timestamps || timestamps.length === 0) return [];
+  
+    // Ensure timestamps are sorted
+    timestamps.sort((a, b) => a - b);
+  
+    // Limit to 6 evenly spaced values
+    const step = Math.max(1, Math.floor(timestamps.length / 6));
+    const limitedLabels = timestamps.filter((_, index) => index % step === 0);
+  
+    return new Set(limitedLabels); // Use Set to prevent duplicates
+  };
+  
+  
+  
 
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
@@ -283,14 +348,24 @@ const filteredChartData = useMemo(() => {
               stroke="black"
               strokeOpacity={0.2}
             />
-            <XAxis dataKey="timestamp" stroke="black" />
+            <XAxis
+              dataKey="timestamp_unix"
+              tickFormatter={(value) => {
+                const limitedLabels = formatXAxis(filteredChartData.map(entry => entry.timestamp_unix));
+                return limitedLabels.has(value)
+                  ? new Date(value * 1000).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", hour12: true })
+                  : "";
+              }}
+              stroke="black"
+            />
+
             <YAxis
               stroke="black"
               domain={[minY, maxY]}
               tickLine={true}
               axisLine={true}
             />
-            <Tooltip />
+           <Tooltip content={<CustomTooltip />} />
             <Area
               type="monotone"
               dataKey="L1"
