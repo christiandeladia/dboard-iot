@@ -33,16 +33,27 @@ const CustomTooltip = ({ active, payload, timeframe }) => {
   return (
     <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
       <p className="text-gray-700 font-semibold">{formattedDate}</p>
-      {payload.map((item, index) => (
-        <p key={index} className="text-gray-600">
-          <span className="font-semibold" style={{ color: item.color }}>
-            {item.name}
-          </span>
-          : {item.value} V
-        </p>
-      ))}
+      {payload.map((item, index) => {
+        let unit = "V"; // Default to Volts
+  
+        if (item.name.includes("current")) unit = "A"; // Amperes
+        if (item.name.includes("frequency")) unit = "Hz"; // Hertz
+        if (item.name.includes("power_factor")) unit = "PF"; 
+        if (item.name.includes("curr_harmonic")) unit = "%"; 
+        if (item.name.includes("volt_harmonic")) unit = "%"; 
+        
+        return (
+          <p key={index} className="text-gray-600">
+            <span className="font-semibold" style={{ color: item.color }}>
+              {item.name}
+            </span>
+            : {item.value} {unit}
+          </p>
+        );
+      })}
     </div>
   );
+  
 };
 
 export default CustomTooltip;
