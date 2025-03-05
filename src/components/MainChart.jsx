@@ -455,6 +455,44 @@ const MainChart = ({ selectedPlant }) => {
                 />
               )}
 
+              {/* Power Factor Data */}
+              {selectedPhases.some(
+                (phase) => phase.value === "L1_power_factor"
+              ) && (
+                <Area
+                  type="monotone"
+                  dataKey="L1_power_factor"
+                  stroke="rgb(128, 128, 128)"
+                  fill="rgba(128, 128, 128, 0.3)"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+              )}
+              {selectedPhases.some(
+                (phase) => phase.value === "L2_power_factor"
+              ) && (
+                <Area
+                  type="monotone"
+                  dataKey="L2_power_factor"
+                  stroke="rgb(169, 169, 169)"
+                  fill="rgba(169, 169, 169, 0.3)"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+              )}
+              {selectedPhases.some(
+                (phase) => phase.value === "L3_power_factor"
+              ) && (
+                <Area
+                  type="monotone"
+                  dataKey="L3_power_factor"
+                  stroke="rgb(192, 192, 192)"
+                  fill="rgba(192, 192, 192, 0.3)"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+              )}
+
               {/* Power Data */}  
               {selectedPhases.some((phase) => phase.value === "L1_power") && (
                 <Area
