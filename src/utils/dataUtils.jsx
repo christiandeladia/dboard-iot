@@ -47,6 +47,12 @@ export const groupAndAverage = (data, getKey) => {
       L1_power_factor: avg(values.map((v) => v.power_factors_avg?.L1 || 0)).toFixed(2),
       L2_power_factor: avg(values.map((v) => v.power_factors_avg?.L2 || 0)).toFixed(2),
       L3_power_factor: avg(values.map((v) => v.power_factors_avg?.L3 || 0)).toFixed(2),
+
+      // Power
+      L1_power: avg(values.map((v) => v.power?.L1 || 0)).toFixed(2),
+      L2_power: avg(values.map((v) => v.power?.L2 || 0)).toFixed(2),
+      L3_power: avg(values.map((v) => v.power?.L3 || 0)).toFixed(2),
+      total_power: avg(values.map((v) => v.power?.total || 0)).toFixed(2),
     };
   });
 };

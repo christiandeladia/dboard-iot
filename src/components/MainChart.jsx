@@ -8,7 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../Config";
 import DateRangePicker from "../components/DateRangePicker";
 import CustomTooltip from "../components/CustomTooltip";
@@ -30,17 +30,16 @@ const MainChart = ({ selectedPlant }) => {
 
   // Fetch data from Firestore
   useEffect(() => {
-    const fetchData = async () => {
-      if (!selectedPlant) return;
-      const querySnapshot = await getDocs(collection(db, "meter_monitor_day"));
-      const fetchedData = querySnapshot.docs
-        .map((doc) => doc.data())
-        .filter((entry) => entry.plant_id === selectedPlant); // Filter by selected plant
-
+    if (!selectedPlant) return;
+  
+    const q = query(collection(db, "meter_monitor_day"), where("plant_id", "==", selectedPlant));
+  
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedData = querySnapshot.docs.map((doc) => doc.data());
       setData(fetchedData);
-    };
-
-    fetchData();
+    });
+  
+    return () => unsubscribe(); // Cleanup listener on unmount
   }, [selectedPlant]);
 
   // Filter and group data by timeframe
@@ -109,6 +108,11 @@ const MainChart = ({ selectedPlant }) => {
             L1_power_factor: entry.power_factors_avg?.L1 || null,
             L2_power_factor: entry.power_factors_avg?.L2 || null,
             L3_power_factor: entry.power_factors_avg?.L3 || null,
+            // Power
+            L1_power: entry.power?.L1 || null,
+            L2_power: entry.power?.L2 || null,
+            L3_power: entry.power?.L3 || null,
+            total_power: entry.power?.total || null,
           }));
 
       case "Month":
@@ -153,6 +157,7 @@ const MainChart = ({ selectedPlant }) => {
       ...getAllValues(filteredChartData, "volt_harmonic"),
       ...getAllValues(filteredChartData, "curr_harmonic"),
       ...getAllValues(filteredChartData, "power_factor"),
+      ...getAllValues(filteredChartData, "power"),
     ];
 
     if (allValues.length === 0) return { minY: 0, maxY: 0 };
@@ -209,8 +214,8 @@ const MainChart = ({ selectedPlant }) => {
         allValues = data.flatMap((entry) => Object.values(entry.voltages_avg));
     }
 
-    const min = Math.min(...allValues) - 0.2;
-    const max = Math.max(...allValues) + 0.2;
+    const min = Math.min(...allValues) - 1;
+    const max = Math.max(...allValues) + 1;
 
     return {
       minY: parseFloat(min.toFixed(1)), // Limit to 1 decimal place
@@ -450,43 +455,48 @@ const MainChart = ({ selectedPlant }) => {
                 />
               )}
 
-              {/* Power Factor Data */}
-              {selectedPhases.some(
-                (phase) => phase.value === "L1_power_factor"
-              ) && (
+              {/* Power Data */}  
+              {selectedPhases.some((phase) => phase.value === "L1_power") && (
                 <Area
                   type="monotone"
-                  dataKey="L1_power_factor"
-                  stroke="rgb(128, 128, 128)"
-                  fill="rgba(128, 128, 128, 0.3)"
+                  dataKey="L1_power"
+                  stroke="rgb(255, 0, 0)" // Red
+                  fill="rgba(255, 0, 0, 0.3)"
                   strokeWidth={2}
                   dot={{ r: 2 }}
                 />
               )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L2_power_factor"
-              ) && (
+              {selectedPhases.some((phase) => phase.value === "L2_power") && (
                 <Area
                   type="monotone"
-                  dataKey="L2_power_factor"
-                  stroke="rgb(169, 169, 169)"
-                  fill="rgba(169, 169, 169, 0.3)"
+                  dataKey="L2_power"
+                  stroke="rgb(255, 69, 0)" // Orange-Red
+                  fill="rgba(255, 69, 0, 0.3)"
                   strokeWidth={2}
                   dot={{ r: 2 }}
                 />
               )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L3_power_factor"
-              ) && (
+              {selectedPhases.some((phase) => phase.value === "L3_power") && (
                 <Area
                   type="monotone"
-                  dataKey="L3_power_factor"
-                  stroke="rgb(192, 192, 192)"
-                  fill="rgba(192, 192, 192, 0.3)"
+                  dataKey="L3_power"
+                  stroke="rgb(255, 140, 0)" // Dark Orange
+                  fill="rgba(255, 140, 0, 0.3)"
                   strokeWidth={2}
                   dot={{ r: 2 }}
                 />
               )}
+              {selectedPhases.some((phase) => phase.value === "total_power") && (
+                <Area
+                  type="monotone"
+                  dataKey="total_power"
+                  stroke="rgb(255, 165, 0)" // Lighter Orange (for total power)
+                  fill="rgba(255, 165, 0, 0.3)"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                />
+              )}
+
             </AreaChart>
           </ResponsiveContainer>
         )}
