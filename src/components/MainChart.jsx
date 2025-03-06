@@ -45,33 +45,31 @@ const MainChart = ({ selectedPlant }) => {
   // Filter and group data by timeframe
   const filteredChartData = useMemo(() => {
     if (!data.length) return [];
-
+  
     let startTimestamp, endTimestamp;
-
+  
     if (selectedDates && selectedDates.length === 2) {
-      const startDate = new Date(selectedDates[0] * 1000); // Convert to JS Date
+      const startDate = new Date(selectedDates[0] * 1000);
       const endDate = new Date(selectedDates[1] * 1000);
-
-      // Ensure we cover the entire day
+  
       startTimestamp = Math.floor(startDate.setHours(0, 0, 0, 0) / 1000);
       endTimestamp = Math.floor(endDate.setHours(23, 59, 59, 999) / 1000);
     } else {
-      // Default to today's data if no range is selected
       const today = new Date();
       startTimestamp = Math.floor(today.setHours(0, 0, 0, 0) / 1000);
       endTimestamp = Math.floor(today.setHours(23, 59, 59, 999) / 1000);
     }
-
-    // Filter data within the full date range
+  
     const filteredData = data.filter(
       (entry) =>
         entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp
     );
-
-    // Apply grouping based on timeframe selection
+  
+    let groupedData = [];
+  
     switch (timeframe) {
       case "Day":
-        return filteredData
+        groupedData = filteredData
           .sort((a, b) => a.timestamp - b.timestamp)
           .map((entry) => ({
             timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString(
@@ -84,10 +82,12 @@ const MainChart = ({ selectedPlant }) => {
               }
             ),
             timestamp_unix: entry.timestamp,
+  
             // Voltage Data
             L1_voltage: entry.voltages_avg?.L1 || null,
             L2_voltage: entry.voltages_avg?.L2 || null,
             L3_voltage: entry.voltages_avg?.L3 || null,
+  
             // Current Data
             L1_current: entry.currents_avg?.L1 || null,
             L2_current: entry.currents_avg?.L2 || null,
@@ -114,9 +114,10 @@ const MainChart = ({ selectedPlant }) => {
             L3_power: entry.power?.L3 || null,
             total_power: entry.power?.total || null,
           }));
-
+        break;
+  
       case "Month":
-        return groupAndAverage(filteredData, (item) => {
+        groupedData = groupAndAverage(filteredData, (item) => {
           const date = new Date(item.timestamp * 1000);
           return date.toLocaleDateString(undefined, {
             month: "short",
@@ -126,17 +127,26 @@ const MainChart = ({ selectedPlant }) => {
           (a, b) =>
             new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
+        break;
 
       case "Year":
-        return groupAndAverage(filteredData, (item) => {
+        groupedData = groupAndAverage(filteredData, (item) => {
           const date = new Date(item.timestamp * 1000);
           return date.toLocaleDateString(undefined, { month: "long" });
         });
-
+        break;
+  
       default:
-        return filteredData;
+        groupedData = filteredData;
     }
-  }, [data, timeframe, selectedDates]);
+  
+    // ✅ Remove timestamps where **ALL** selected phases are null
+    return groupedData.filter((entry) =>
+      selectedPhases.some((phase) => entry[phase.value] !== null)
+    );
+  }, [data, timeframe, selectedDates, selectedPhases]);
+  
+
 
   // Compute min and max for Y-axis
   const { minY, maxY } = useMemo(() => {
@@ -221,7 +231,7 @@ const MainChart = ({ selectedPlant }) => {
       minY: parseFloat(min.toFixed(1)), // Limit to 1 decimal place
       maxY: parseFloat(max.toFixed(1)), // Limit to 1 decimal place
     };
-  }, [data, timeframe]);
+  }, [filteredChartData, timeframe]);
 
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">

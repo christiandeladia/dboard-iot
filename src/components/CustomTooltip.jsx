@@ -41,6 +41,7 @@ const CustomTooltip = ({ active, payload, timeframe }) => {
         if (item.name.includes("power_factor")) unit = "PF"; 
         if (item.name.includes("curr_harmonic")) unit = "%"; 
         if (item.name.includes("volt_harmonic")) unit = "%"; 
+        if (item.name.includes("_power")) unit = "kW"; 
         
         return (
           <p key={index} className="text-gray-600">

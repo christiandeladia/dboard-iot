@@ -126,18 +126,46 @@ export const phaseOptions = [
   
         {/* MultiSelect for Phases */}
         <Select
-          options={availablePhases} // ✅ Show only valid phases
-          isMulti
-          value={selectedPhases}
-          onChange={handlePhaseChange}
-          getOptionLabel={e => (
-            <div className="flex items-center">
-              <span style={{ color: e.color, fontWeight: "bold" }}>{e.label}</span>
-            </div>
-          )}
-          getOptionValue={e => e.value}
-          className="w-100 bg-gray-50 border-gray-300 border shadow-md rounded-md text-gray-700"
-        />
+  options={availablePhases}
+  isMulti
+  value={selectedPhases}
+  onChange={handlePhaseChange}
+  getOptionLabel={(e) => (
+    <div className="flex items-center bg-transparent">
+      <span
+        className="w-3 h-3 rounded-full mr-2"
+        style={{ backgroundColor: e.color, fontWeight: "bold" }}
+      ></span>
+      {e.label}
+    </div>
+  )}
+  getOptionValue={(e) => e.value}
+  className="w-100 bg-gray-50 border-gray-300 border shadow-md rounded-md text-gray-700"
+  styles={{
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "white", // Change background to white
+      "&:hover": {
+        border: "red",
+        color: "white",
+      },
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: "black", // Ensure text remains visible
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "black",
+      "&:hover": {
+        backgroundColor: "red",
+        color: "white",
+      },
+    }),
+  }}
+/>
+
+
       </div>
     );
   };
