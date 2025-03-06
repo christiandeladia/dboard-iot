@@ -13,7 +13,7 @@ import { db } from "../Config";
 import DateRangePicker from "../components/DateRangePicker";
 import CustomTooltip from "../components/CustomTooltip";
 import PowerDropdown from "../components/PowerDropdown";
-import { powerOptions, phaseOptions } from "../components/PowerDropdown";
+import { groupedPhaseOptions } from "../components/PowerDropdown";
 import { groupAndAverage, formatXAxis } from "../utils/dataUtils";
 
 const MainChart = ({ selectedPlant }) => {
@@ -21,12 +21,14 @@ const MainChart = ({ selectedPlant }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [data, setData] = useState([]);
   const [selectedDates, setSelectedDates] = useState(null);
-  const [selectedPower, setSelectedPower] = useState(powerOptions[0]); // Default to "Solar"
-  const [selectedPhases, setSelectedPhases] = useState(
-    phaseOptions.filter((phase) =>
-      powerOptions[0].dataKeys.includes(phase.value)
-    )
-  );
+  // ✅ Find the "Total Power" option in groupedPhaseOptions
+  const totalPowerOption = groupedPhaseOptions
+    .flatMap(group => group.options)
+    .flatMap(subGroup => subGroup.options)
+    .find(option => option.value === "total_power");
+
+  // ✅ Set "Total Power" as the default selected phase
+  const [selectedPhases, setSelectedPhases] = useState([totalPowerOption]);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -237,7 +239,6 @@ const MainChart = ({ selectedPlant }) => {
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <PowerDropdown
-          onPowerChange={setSelectedPower}
           onPhaseChange={setSelectedPhases}
         />
 
@@ -274,17 +275,17 @@ const MainChart = ({ selectedPlant }) => {
             <AreaChart data={filteredChartData}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                vertical={false}
                 stroke="black"
                 strokeOpacity={0.2}
               />
-              <XAxis dataKey="timestamp" minTickGap={40} stroke="black" />
+              <XAxis dataKey="timestamp" minTickGap={40} stroke="gray" tick={{ style: { pointerEvents: "none", userSelect: "none" } }}/>
 
               <YAxis
-                stroke="black"
+                stroke="gray"
                 domain={[minY, maxY]}
                 tickLine={true}
                 axisLine={true}
+                tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
               />
               <Tooltip content={<CustomTooltip timeframe={timeframe} />} />
               {/* Voltage Data - Shades of Blue */}

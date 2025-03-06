@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css"; // Main styles
 import "react-date-range/dist/theme/default.css"; // Theme styles
+import { FaAngleLeft, FaAngleRight } from "react-icons/fa";
 
 const DateRangePicker = ({ onDateSelect }) => {
   const [showModal, setShowModal] = useState(false);
@@ -17,12 +18,12 @@ const DateRangePicker = ({ onDateSelect }) => {
   const [tempDateRange, setTempDateRange] = useState(dateRange);
 
   const handleSelect = (ranges) => {
-    setTempDateRange([ranges.selection]); // ✅ Store changes temporarily
+    setTempDateRange([ranges.selection]);
   };
 
   const handleApply = () => {
     setShowModal(false);
-    setDateRange(tempDateRange); // ✅ Apply the changes only when clicking "Apply"
+    setDateRange(tempDateRange);
 
     if (onDateSelect) {
       onDateSelect([
@@ -32,17 +33,60 @@ const DateRangePicker = ({ onDateSelect }) => {
     }
   };
 
+  // Function to change date when left/right button is clicked
+  const shiftDate = (direction) => {
+    const newDate = new Date(dateRange[0].startDate);
+    newDate.setDate(newDate.getDate() + (direction === "left" ? -1 : 1));
+
+    const updatedRange = [
+      {
+        startDate: newDate,
+        endDate: newDate, // Ensure both start and end dates are the same for single-day selection
+        key: "selection",
+      },
+    ];
+
+    setDateRange(updatedRange);
+    if (onDateSelect) {
+      onDateSelect([
+        Math.floor(newDate.getTime() / 1000),
+        Math.floor(newDate.getTime() / 1000),
+      ]);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center">
-      {/* Button to Open Modal */}
+    <div className="flex items-center space-x-2">
+
+
+      {/* Date Picker Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="bg-gray-50 text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition border-gray-300 border shadow-md"
+        className="bg-gray-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition border-gray-300 border shadow-md"
       >
         📆 {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString()
           ? dateRange[0].startDate.toDateString()
           : `${dateRange[0].startDate.toDateString()} - ${dateRange[0].endDate.toDateString()}`}
       </button>
+
+      {/* Left Button (⬅) - Shown only if single date is selected */}
+      {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString() && (
+        <button
+          onClick={() => shiftDate("left")}
+          className="px-3 py-3 bg-white border-gray-300 border shadow-md rounded-lg hover:bg-gray-200 transition"
+        >
+          <FaAngleLeft />
+        </button>
+      )}
+            {/* Right Button (➡) - Shown only if single date is selected */}
+            {dateRange[0].startDate.toDateString() === dateRange[0].endDate.toDateString() && (
+        <button
+          onClick={() => shiftDate("right")}
+          className="px-3 py-3 bg-white border-gray-300 border shadow-md rounded-lg hover:bg-gray-200 transition"
+        >
+          <FaAngleRight />
+        </button>
+      )}
 
       {/* Modal */}
       {showModal && (
@@ -52,7 +96,7 @@ const DateRangePicker = ({ onDateSelect }) => {
             <DateRange
               onChange={handleSelect}
               moveRangeOnFirstSelection={false}
-              ranges={tempDateRange} // ✅ Use temp state
+              ranges={tempDateRange}
               months={2}
               direction="horizontal"
               preventSnapRefocus={true}
