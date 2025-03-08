@@ -130,7 +130,7 @@ const PowerDropdown = ({ onPhaseChange }) => {
             >
               <div
                 className={`text-md font-semibold text-gray-800 flex items-center w-full justify-center ${
-                  group.clickable ? "cursor-pointer hover:text-blue-600" : ""
+                  group.clickable ? "cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded" : ""
                 }`}
                 onClick={group.clickable ? handleGridClick : undefined}
               >

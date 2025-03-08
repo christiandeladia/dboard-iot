@@ -54,11 +54,14 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
     menu: (provided) => ({
       ...provided,
       borderRadius: "8px",
+      padding: "10px",
+      border: "1px solid #d1d5dc",
       boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
     }),
     option: (provided, state) => ({
       ...provided,
       padding: "5px",
+      borderRadius: "4px",
       backgroundColor: state.isSelected ? "#2563eb" : state.isFocused ? "#eff6ff" : "white",
       color: state.isSelected ? "white" : "#374151",
       "&:hover": { backgroundColor: "#eff6ff", color: "#2563eb" },
