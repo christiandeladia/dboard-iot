@@ -83,5 +83,35 @@ export const formatXAxis = (timestamps) => {
   };
   
   
-
+  export const formatXAxisLabel = (value) => {
+    if (typeof value !== "string") return value;
+    
+    // If the value looks like a time-of-day string, e.g., "9:15 AM", just return it.
+    if (value.match(/^\d{1,2}:\d{2}\s*(AM|PM)$/i)) {
+      return value;
+    }
+    
+    // If value is in "YYYY-MM-DD" format, format as "Mar 1"
+    if (value.length === 10) {
+      const [year, month, day] = value.split("-");
+      const dateObj = new Date(year, parseInt(month, 10) - 1, day);
+      return dateObj.toLocaleDateString("en-PH", {
+        month: "short",
+        day: "numeric",
+      });
+    }
+    
+    // If value is in "YYYY-MM" format, format as "March 2025"
+    if (value.length === 7) {
+      const [year, month] = value.split("-");
+      const dateObj = new Date(year, parseInt(month, 10) - 1);
+      return dateObj.toLocaleDateString("en-PH", {
+        month: "long",
+        year: "numeric",
+      });
+    }
+    
+    return value;
+  };
+  
 

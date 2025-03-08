@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -11,144 +11,128 @@ import {
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../Config";
 import DateRangePicker from "../components/DateRangePicker";
-import CustomTooltip from "../components/CustomTooltip";
 import PowerDropdown from "../components/PowerDropdown";
 import { groupedPhaseOptions } from "../components/PowerDropdown";
-import { groupAndAverage, formatXAxis } from "../utils/dataUtils";
+import CustomTooltip from "../components/CustomTooltip";
+import { groupAndAverage, formatXAxisLabel  } from "../utils/dataUtils";
 
 const MainChart = ({ selectedPlant }) => {
-  const [timeframe, setTimeframe] = useState("Day");
-  const [isOpen, setIsOpen] = useState(false);
-  const [data, setData] = useState([]);
+  // Remove timeframe state & UI (Day/Month/Year) – now only date range from DateDropdown is used.
   const [selectedDates, setSelectedDates] = useState(null);
-  // ✅ Find the "Total Power" option in groupedPhaseOptions
+  
+  // Find the "Total Power" option in groupedPhaseOptions and set it as default.
   const totalPowerOption = groupedPhaseOptions
-    .flatMap(group => group.options)
-    .flatMap(subGroup => subGroup.options)
-    .find(option => option.value === "total_power");
-
-  // ✅ Set "Total Power" as the default selected phase
+    .flatMap((group) => group.options)
+    .flatMap((subGroup) => subGroup.options)
+    .find((option) => option.value === "total_power");
   const [selectedPhases, setSelectedPhases] = useState([totalPowerOption]);
+  const [data, setData] = useState([]);
 
   // Fetch data from Firestore
   useEffect(() => {
     if (!selectedPlant) return;
-  
     const q = query(collection(db, "meter_monitor_day"), where("plant_id", "==", selectedPlant));
-  
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedData = querySnapshot.docs.map((doc) => doc.data());
       setData(fetchedData);
     });
-  
-    return () => unsubscribe(); // Cleanup listener on unmount
+    return () => unsubscribe();
   }, [selectedPlant]);
 
-  // Filter and group data by timeframe
   const filteredChartData = useMemo(() => {
     if (!data.length) return [];
   
-    let startTimestamp, endTimestamp;
-  
+    let startTimestamp, endTimestamp, startDate, endDate;
     if (selectedDates && selectedDates.length === 2) {
-      const startDate = new Date(selectedDates[0] * 1000);
-      const endDate = new Date(selectedDates[1] * 1000);
-  
+      startDate = new Date(selectedDates[0] * 1000);
+      endDate = new Date(selectedDates[1] * 1000);
       startTimestamp = Math.floor(startDate.setHours(0, 0, 0, 0) / 1000);
       endTimestamp = Math.floor(endDate.setHours(23, 59, 59, 999) / 1000);
     } else {
       const today = new Date();
+      startDate = new Date(today);
+      endDate = new Date(today);
       startTimestamp = Math.floor(today.setHours(0, 0, 0, 0) / 1000);
       endTimestamp = Math.floor(today.setHours(23, 59, 59, 999) / 1000);
     }
   
     const filteredData = data.filter(
-      (entry) =>
-        entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp
+      (entry) => entry.timestamp >= startTimestamp && entry.timestamp <= endTimestamp
     );
   
     let groupedData = [];
+    // Calculate difference in days
+    const diffInMs = endDate - startDate;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
   
-    switch (timeframe) {
-      case "Day":
-        groupedData = filteredData
-          .sort((a, b) => a.timestamp - b.timestamp)
-          .map((entry) => ({
-            timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString(
-              "en-PH",
-              {
-                timeZone: "Asia/Manila",
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              }
-            ),
-            timestamp_unix: entry.timestamp,
-  
-            // Voltage Data
-            L1_voltage: entry.voltages_avg?.L1 || null,
-            L2_voltage: entry.voltages_avg?.L2 || null,
-            L3_voltage: entry.voltages_avg?.L3 || null,
-  
-            // Current Data
-            L1_current: entry.currents_avg?.L1 || null,
-            L2_current: entry.currents_avg?.L2 || null,
-            L3_current: entry.currents_avg?.L3 || null,
-            // Frequency Data
-            L1_frequency: entry.frequencies_avg?.L1 || null,
-            L2_frequency: entry.frequencies_avg?.L2 || null,
-            L3_frequency: entry.frequencies_avg?.L3 || null,
-            // Voltage Harmonics (%)
-            L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
-            L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
-            L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
-            // Current Harmonics (%)
-            L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
-            L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
-            L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
-            // Power Factor (Unitless)
-            L1_power_factor: entry.power_factors_avg?.L1 || null,
-            L2_power_factor: entry.power_factors_avg?.L2 || null,
-            L3_power_factor: entry.power_factors_avg?.L3 || null,
-            // Power
-            L1_power: entry.power?.L1 || null,
-            L2_power: entry.power?.L2 || null,
-            L3_power: entry.power?.L3 || null,
-            total_power: entry.power?.total || null,
-          }));
-        break;
-  
-      case "Month":
+    if (diffInDays < 1) {
+      // Single-day range: map each entry to its time string.
+      groupedData = filteredData
+        .sort((a, b) => a.timestamp - b.timestamp)
+        .map((entry) => ({
+          timestamp: new Date(entry.timestamp * 1000).toLocaleTimeString("en-PH", {
+            timeZone: "Asia/Manila",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          timestamp_unix: entry.timestamp,
+          L1_voltage: entry.voltages_avg?.L1 || null,
+          L2_voltage: entry.voltages_avg?.L2 || null,
+          L3_voltage: entry.voltages_avg?.L3 || null,
+          L1_current: entry.currents_avg?.L1 || null,
+          L2_current: entry.currents_avg?.L2 || null,
+          L3_current: entry.currents_avg?.L3 || null,
+          L1_frequency: entry.frequencies_avg?.L1 || null,
+          L2_frequency: entry.frequencies_avg?.L2 || null,
+          L3_frequency: entry.frequencies_avg?.L3 || null,
+          L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
+          L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
+          L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
+          L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
+          L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
+          L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
+          L1_power_factor: entry.power_factors_avg?.L1 || null,
+          L2_power_factor: entry.power_factors_avg?.L2 || null,
+          L3_power_factor: entry.power_factors_avg?.L3 || null,
+          L1_power: entry.power?.L1 || null,
+          L2_power: entry.power?.L2 || null,
+          L3_power: entry.power?.L3 || null,
+          total_power: entry.power?.total || null,
+        }));
+    } else {
+      // For a multi-day custom range, choose grouping based on span:
+      if (
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getFullYear() === endDate.getFullYear()
+      ) {
+        // Group by day within the same month/year.
         groupedData = groupAndAverage(filteredData, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return date.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          });
-        }).sort(
-          (a, b) =>
-            new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-        );
-        break;
-
-      case "Year":
-        groupedData = groupAndAverage(filteredData, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return date.toLocaleDateString(undefined, { month: "long" });
+          const d = new Date(item.timestamp * 1000);
+          // Create an ISO-like day string: YYYY-MM-DD
+          return `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`;
         });
-        break;
-  
-      default:
-        groupedData = filteredData;
+      } else {
+        // Group by month for ranges spanning multiple months.
+        groupedData = groupAndAverage(filteredData, (item) => {
+          const d = new Date(item.timestamp * 1000);
+          // Create an ISO-like month string: YYYY-MM
+          return `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}`;
+        });
+      }
+      // Sort the grouped data by converting the grouping key back to a Date.
+      groupedData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     }
   
-    // ✅ Remove timestamps where **ALL** selected phases are null
-    return groupedData.filter((entry) =>
+    // Remove any grouped entry where ALL selected phases are null.
+    groupedData = groupedData.filter((entry) =>
       selectedPhases.some((phase) => entry[phase.value] !== null)
     );
-  }, [data, timeframe, selectedDates, selectedPhases]);
   
-
+    return groupedData;
+  }, [data, selectedDates, selectedPhases]);
+  
+  
 
   // Compute min and max for Y-axis
   const { minY, maxY } = useMemo(() => {
@@ -173,98 +157,24 @@ const MainChart = ({ selectedPlant }) => {
     ];
 
     if (allValues.length === 0) return { minY: 0, maxY: 0 };
-
-    switch (timeframe) {
-      case "Day":
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        allValues = data
-          .filter((entry) => {
-            const entryDate = new Date(entry.timestamp * 1000);
-            return entryDate.toDateString() === today.toDateString();
-          })
-          .flatMap((entry) => Object.values(entry.voltages_avg));
-        break;
-
-      case "Month":
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-        const dailyData = groupAndAverage(data, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return date.toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          });
-        }).filter((entry) => {
-          const date = new Date(entry.timestamp);
-          return (
-            date.getMonth() === currentMonth &&
-            date.getFullYear() === currentYear
-          );
-        });
-
-        allValues = getAllValues(dailyData);
-        break;
-
-      case "Year":
-        const thisYear = new Date().getFullYear();
-        const monthlyData = groupAndAverage(data, (item) => {
-          const date = new Date(item.timestamp * 1000);
-          return date.toLocaleDateString(undefined, {
-            month: "long",
-          });
-        }).filter((entry) => {
-          const date = new Date(`01 ${entry.timestamp} ${thisYear}`);
-          return date.getFullYear() === thisYear;
-        });
-
-        allValues = getAllValues(monthlyData);
-        break;
-
-      default:
-        allValues = data.flatMap((entry) => Object.values(entry.voltages_avg));
-    }
-
     const min = Math.min(...allValues) - 1;
     const max = Math.max(...allValues) + 1;
-
     return {
-      minY: parseFloat(min.toFixed(1)), // Limit to 1 decimal place
-      maxY: parseFloat(max.toFixed(1)), // Limit to 1 decimal place
+      minY: parseFloat(min.toFixed(1)),
+      maxY: parseFloat(max.toFixed(1)),
     };
-  }, [filteredChartData, timeframe]);
+  }, [filteredChartData]);
 
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <PowerDropdown
-          onPhaseChange={setSelectedPhases}
-        />
-
+        <PowerDropdown onPhaseChange={setSelectedPhases} />
         <div className="flex items-center space-x-4">
+          {/* Replace DateRangePicker with the new DateDropdown */}
           <DateRangePicker onDateSelect={(dates) => setSelectedDates(dates)} />
-
-          <div className="inline-flex border border-gray-300 rounded-md overflow-hidden">
-            {["Day", "Month", "Year"].map((label) => (
-              <button
-                key={label}
-                onClick={() => setTimeframe(label)}
-                className={`px-4 py-2 text-sm font-medium border-r last:border-0 transition-all 
-                    ${
-                      timeframe === label
-                        ? "bg-blue-600 text-white"
-                        : "bg-white text-gray-900 hover:bg-gray-100"
-                    }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* CHART  */}
       <div className="flex-1">
         {filteredChartData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -273,13 +183,14 @@ const MainChart = ({ selectedPlant }) => {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={filteredChartData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="black"
-                strokeOpacity={0.2}
+              <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
+              <XAxis
+                dataKey="timestamp"
+                minTickGap={40}
+                stroke="gray"
+                tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
+                tickFormatter={formatXAxisLabel}
               />
-              <XAxis dataKey="timestamp" minTickGap={40} stroke="gray" tick={{ style: { pointerEvents: "none", userSelect: "none" } }}/>
-
               <YAxis
                 stroke="gray"
                 domain={[minY, maxY]}
@@ -287,7 +198,7 @@ const MainChart = ({ selectedPlant }) => {
                 axisLine={true}
                 tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
               />
-              <Tooltip content={<CustomTooltip timeframe={timeframe} />} />
+              <Tooltip content={<CustomTooltip />} />
               {/* Voltage Data - Shades of Blue */}
               {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
                 <Area
