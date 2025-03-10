@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -14,30 +16,44 @@ import DateRangePicker from "../components/DateRangePicker";
 import PowerDropdown from "../components/PowerDropdown";
 import { groupedPhaseOptions } from "../components/PowerDropdown";
 import CustomTooltip from "../components/CustomTooltip";
-import { groupAndAverage, formatXAxisLabel  } from "../utils/dataUtils";
+import { groupAndAverage, formatXAxisLabel } from "../utils/dataUtils";
 
 const MainChart = ({ selectedPlant }) => {
-  // Remove timeframe state & UI (Day/Month/Year) – now only date range from DateDropdown is used.
   const [selectedDates, setSelectedDates] = useState(null);
-  
-  // Find the "Total Power" option in groupedPhaseOptions and set it as default.
+
+  // Set default phase to "Total Power"
   const totalPowerOption = groupedPhaseOptions
     .flatMap((group) => group.options)
     .flatMap((subGroup) => subGroup.options)
     .find((option) => option.value === "total_power");
-  const [selectedPhases, setSelectedPhases] = useState([totalPowerOption]);
+  const [selectedPhases, setSelectedPhases] = useState(
+    totalPowerOption ? [totalPowerOption] : []
+  );
   const [data, setData] = useState([]);
 
   // Fetch data from Firestore
   useEffect(() => {
     if (!selectedPlant) return;
-    const q = query(collection(db, "meter_monitor_day"), where("plant_id", "==", selectedPlant));
+    const q = query(
+      collection(db, "meter_monitor_day"),
+      where("plant_id", "==", selectedPlant)
+    );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedData = querySnapshot.docs.map((doc) => doc.data());
       setData(fetchedData);
     });
     return () => unsubscribe();
   }, [selectedPlant]);
+
+  // Compute day difference using selectedDates.
+  const diffInDays = useMemo(() => {
+    if (selectedDates && selectedDates.length === 2) {
+      const start = new Date(selectedDates[0] * 1000);
+      const end = new Date(selectedDates[1] * 1000);
+      return (end - start) / (1000 * 60 * 60 * 24);
+    }
+    return 0;
+  }, [selectedDates]);
 
   const filteredChartData = useMemo(() => {
     if (!data.length) return [];
@@ -61,12 +77,12 @@ const MainChart = ({ selectedPlant }) => {
     );
   
     let groupedData = [];
-    // Calculate difference in days
+    // Use diffInDays computed from selectedDates (or compute here if not available)
     const diffInMs = endDate - startDate;
     const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
   
-    if (diffInDays < 1) {
-      // Single-day range: map each entry to its time string.
+    if (diffInDays <= 2) {
+      // For ranges less than 2 days: do not group data.
       groupedData = filteredData
         .sort((a, b) => a.timestamp - b.timestamp)
         .map((entry) => ({
@@ -101,30 +117,25 @@ const MainChart = ({ selectedPlant }) => {
           total_power: entry.power?.total || null,
         }));
     } else {
-      // For a multi-day custom range, choose grouping based on span:
+      // For ranges of 2 days or more, group data by day (or month if spanning multiple months)
       if (
         startDate.getMonth() === endDate.getMonth() &&
         startDate.getFullYear() === endDate.getFullYear()
       ) {
-        // Group by day within the same month/year.
         groupedData = groupAndAverage(filteredData, (item) => {
           const d = new Date(item.timestamp * 1000);
-          // Create an ISO-like day string: YYYY-MM-DD
           return `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}-${("0" + d.getDate()).slice(-2)}`;
         });
       } else {
-        // Group by month for ranges spanning multiple months.
         groupedData = groupAndAverage(filteredData, (item) => {
           const d = new Date(item.timestamp * 1000);
-          // Create an ISO-like month string: YYYY-MM
           return `${d.getFullYear()}-${("0" + (d.getMonth() + 1)).slice(-2)}`;
         });
       }
-      // Sort the grouped data by converting the grouping key back to a Date.
       groupedData.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
     }
   
-    // Remove any grouped entry where ALL selected phases are null.
+    // Remove grouped entries where all selected phase values are null.
     groupedData = groupedData.filter((entry) =>
       selectedPhases.some((phase) => entry[phase.value] !== null)
     );
@@ -132,45 +143,38 @@ const MainChart = ({ selectedPlant }) => {
     return groupedData;
   }, [data, selectedDates, selectedPhases]);
   
-  
 
-  // Compute min and max for Y-axis
   const { minY, maxY } = useMemo(() => {
-    const getAllValues = (data, key) => {
-      return data
-        .flatMap((entry) => [
-          entry[`${key}_L1`],
-          entry[`${key}_L2`],
-          entry[`${key}_L3`],
-        ])
-        .filter((value) => value !== null);
-    };
-
-    let allValues = [
-      ...getAllValues(filteredChartData, "voltage"),
-      ...getAllValues(filteredChartData, "current"),
-      ...getAllValues(filteredChartData, "frequency"),
-      ...getAllValues(filteredChartData, "volt_harmonic"),
-      ...getAllValues(filteredChartData, "curr_harmonic"),
-      ...getAllValues(filteredChartData, "power_factor"),
-      ...getAllValues(filteredChartData, "power"),
-    ];
-
-    if (allValues.length === 0) return { minY: 0, maxY: 0 };
+    // Helper function to extract numeric values for a given phase key
+    const getPhaseValues = (phaseKey) =>
+      filteredChartData
+        .map(entry => Number(entry[phaseKey]))
+        .filter(value => value != null && !isNaN(value));
+  
+    // Use selectedPhases to get values for only those keys
+    const allValues = selectedPhases.flatMap(phase => getPhaseValues(phase.value));
+    
+    console.log("Length of allValues for selected phases:", allValues.length);
+    console.log("allValues for selected phases:", allValues);
+  
+    if (allValues.length === 0) {
+      console.log("No valid numeric values found for selected phases:", allValues);
+      return { minY: 0, maxY: 0 };
+    }
     const min = Math.min(...allValues) - 1;
     const max = Math.max(...allValues) + 1;
-    return {
-      minY: parseFloat(min.toFixed(1)),
-      maxY: parseFloat(max.toFixed(1)),
-    };
-  }, [filteredChartData]);
+    const computed = { minY: parseFloat(min.toFixed(1)), maxY: parseFloat(max.toFixed(1)) };
+    console.log("Computed minY and maxY based on selected phases:", computed);
+    return computed;
+  }, [filteredChartData, selectedPhases]);
+  
 
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-4">
         <PowerDropdown onPhaseChange={setSelectedPhases} />
         <div className="flex items-center space-x-4">
-          {/* Replace DateRangePicker with the new DateDropdown */}
+          {/* Replace DateRangePicker with your DateDropdown if needed */}
           <DateRangePicker onDateSelect={(dates) => setSelectedDates(dates)} />
         </div>
       </div>
@@ -182,282 +186,573 @@ const MainChart = ({ selectedPlant }) => {
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={filteredChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
-              <XAxis
-                dataKey="timestamp"
-                minTickGap={40}
-                stroke="gray"
-                tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
-                tickFormatter={formatXAxisLabel}
-              />
-              <YAxis
-                stroke="gray"
-                domain={[minY, maxY]}
-                tickLine={true}
-                axisLine={true}
-                tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              {/* Voltage Data - Shades of Blue */}
-              {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_voltage"
-                  stroke="rgb(0, 102, 255)"
-                  fill="rgba(0, 102, 255, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_voltage"
-                  stroke="rgb(51, 153, 255)"
-                  fill="rgba(51, 153, 255, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_voltage"
-                  stroke="rgb(102, 204, 255)"
-                  fill="rgba(102, 204, 255, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+            {diffInDays >= 2 ? (
+              // Render BarChart when more than 2 days are selected.
+              <BarChart data={filteredChartData}>
+              <defs>
+                  {/* Voltage gradients */}
+                  <linearGradient id="gradientL1_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 102, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 102, 255)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(51, 153, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(51, 153, 255)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(102, 204, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(102, 204, 255)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Current Data - Shades of Yellow */}
-              {selectedPhases.some((phase) => phase.value === "L1_current") && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_current"
-                  stroke="rgb(255, 153, 0)"
-                  fill="rgba(255, 153, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L2_current") && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_current"
-                  stroke="rgb(255, 204, 51)"
-                  fill="rgba(255, 204, 51, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L3_current") && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_current"
-                  stroke="rgb(255, 255, 102)"
-                  fill="rgba(255, 255, 102, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Current gradients */}
+                  <linearGradient id="gradientL1_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 153, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 153, 0)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 204, 51)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 204, 51)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 255, 102)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 255, 102)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Frequency Data - Shades of Green */}
-              {selectedPhases.some(
-                (phase) => phase.value === "L1_frequency"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_frequency"
-                  stroke="rgb(0, 153, 76)"
-                  fill="rgba(0, 153, 76, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L2_frequency"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_frequency"
-                  stroke="rgb(51, 204, 102)"
-                  fill="rgba(51, 204, 102, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L3_frequency"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_frequency"
-                  stroke="rgb(102, 255, 153)"
-                  fill="rgba(102, 255, 153, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Frequency gradients */}
+                  <linearGradient id="gradientL1_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 153, 76)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 153, 76)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(51, 204, 102)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(51, 204, 102)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(102, 255, 153)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(102, 255, 153)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Voltage Harmonics Data */}
-              {selectedPhases.some(
-                (phase) => phase.value === "L1_volt_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_volt_harmonic"
-                  stroke="rgb(255, 99, 71)"
-                  fill="rgba(255, 99, 71, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L2_volt_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_volt_harmonic"
-                  stroke="rgb(255, 140, 0)"
-                  fill="rgba(255, 140, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L3_volt_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_volt_harmonic"
-                  stroke="rgb(255, 69, 0)"
-                  fill="rgba(255, 69, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Voltage Harmonics gradients */}
+                  <linearGradient id="gradientL1_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 99, 71)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 99, 71)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Current Harmonics Data */}
-              {selectedPhases.some(
-                (phase) => phase.value === "L1_curr_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_curr_harmonic"
-                  stroke="rgb(0, 206, 209)"
-                  fill="rgba(0, 206, 209, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L2_curr_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_curr_harmonic"
-                  stroke="rgb(72, 209, 204)"
-                  fill="rgba(72, 209, 204, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L3_curr_harmonic"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_curr_harmonic"
-                  stroke="rgb(32, 178, 170)"
-                  fill="rgba(32, 178, 170, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Current Harmonics gradients */}
+                  <linearGradient id="gradientL1_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 206, 209)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 206, 209)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(72, 209, 204)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(72, 209, 204)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(32, 178, 170)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(32, 178, 170)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Power Factor Data */}
-              {selectedPhases.some(
-                (phase) => phase.value === "L1_power_factor"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_power_factor"
-                  stroke="rgb(128, 128, 128)"
-                  fill="rgba(128, 128, 128, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L2_power_factor"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_power_factor"
-                  stroke="rgb(169, 169, 169)"
-                  fill="rgba(169, 169, 169, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some(
-                (phase) => phase.value === "L3_power_factor"
-              ) && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_power_factor"
-                  stroke="rgb(192, 192, 192)"
-                  fill="rgba(192, 192, 192, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Power Factor gradients */}
+                  <linearGradient id="gradientL1_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(128, 128, 128)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(128, 128, 128)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(169, 169, 169)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(169, 169, 169)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(192, 192, 192)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(192, 192, 192)" stopOpacity={0.5} />
+                  </linearGradient>
 
-              {/* Power Data */}  
-              {selectedPhases.some((phase) => phase.value === "L1_power") && (
-                <Area
-                  type="monotone"
-                  dataKey="L1_power"
-                  stroke="rgb(255, 0, 0)" // Red
-                  fill="rgba(255, 0, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L2_power") && (
-                <Area
-                  type="monotone"
-                  dataKey="L2_power"
-                  stroke="rgb(255, 69, 0)" // Orange-Red
-                  fill="rgba(255, 69, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "L3_power") && (
-                <Area
-                  type="monotone"
-                  dataKey="L3_power"
-                  stroke="rgb(255, 140, 0)" // Dark Orange
-                  fill="rgba(255, 140, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
-              {selectedPhases.some((phase) => phase.value === "total_power") && (
-                <Area
-                  type="monotone"
-                  dataKey="total_power"
-                  stroke="rgb(255, 165, 0)" // Lighter Orange (for total power)
-                  fill="rgba(255, 165, 0, 0.3)"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                />
-              )}
+                  {/* Power gradients */}
+                  <linearGradient id="gradientL1_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 0, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 0, 0)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
+                  </linearGradient>
 
-            </AreaChart>
+                  {/* Total Power gradient */}
+                  <linearGradient id="gradient_total_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 165, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 165, 0)" stopOpacity={0.5} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
+                <XAxis
+                  dataKey="timestamp"
+                  minTickGap={40}
+                  stroke="gray"
+                  tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
+                  tickFormatter={formatXAxisLabel}
+                />
+                <YAxis
+                  stroke="gray"
+                  domain={[minY, maxY]}
+                  tickLine={true}
+                  axisLine={true}
+                  tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                {/* Voltage */}
+                {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
+                  <Bar dataKey="L1_voltage" fill="url(#gradientL1_voltage)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
+                  <Bar dataKey="L2_voltage" fill="url(#gradientL2_voltage)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
+                  <Bar dataKey="L3_voltage" fill="url(#gradientL3_voltage)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Current */}
+                {selectedPhases.some((phase) => phase.value === "L1_current") && (
+                  <Bar dataKey="L1_current" fill="url(#gradientL1_current)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_current") && (
+                  <Bar dataKey="L2_current" fill="url(#gradientL2_current)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_current") && (
+                  <Bar dataKey="L3_current" fill="url(#gradientL3_current)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Frequency */}
+                {selectedPhases.some((phase) => phase.value === "L1_frequency") && (
+                  <Bar dataKey="L1_frequency" fill="url(#gradientL1_frequency)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_frequency") && (
+                  <Bar dataKey="L2_frequency" fill="url(#gradientL2_frequency)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_frequency") && (
+                  <Bar dataKey="L3_frequency" fill="url(#gradientL3_frequency)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Voltage Harmonics */}
+                {selectedPhases.some((phase) => phase.value === "L1_volt_harmonic") && (
+                  <Bar dataKey="L1_volt_harmonic" fill="url(#gradientL1_volt_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_volt_harmonic") && (
+                  <Bar dataKey="L2_volt_harmonic" fill="url(#gradientL2_volt_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_volt_harmonic") && (
+                  <Bar dataKey="L3_volt_harmonic" fill="url(#gradientL3_volt_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Current Harmonics */}
+                {selectedPhases.some((phase) => phase.value === "L1_curr_harmonic") && (
+                  <Bar dataKey="L1_curr_harmonic" fill="url(#gradientL1_curr_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_curr_harmonic") && (
+                  <Bar dataKey="L2_curr_harmonic" fill="url(#gradientL2_curr_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_curr_harmonic") && (
+                  <Bar dataKey="L3_curr_harmonic" fill="url(#gradientL3_curr_harmonic)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Power Factor */}
+                {selectedPhases.some((phase) => phase.value === "L1_power_factor") && (
+                  <Bar dataKey="L1_power_factor" fill="url(#gradientL1_power_factor)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_power_factor") && (
+                  <Bar dataKey="L2_power_factor" fill="url(#gradientL2_power_factor)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_power_factor") && (
+                  <Bar dataKey="L3_power_factor" fill="url(#gradientL3_power_factor)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Power */}
+                {selectedPhases.some((phase) => phase.value === "L1_power") && (
+                  <Bar dataKey="L1_power" fill="url(#gradientL1_power)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L2_power") && (
+                  <Bar dataKey="L2_power" fill="url(#gradientL2_power)" radius={[15, 15, 0, 0]}/>
+                )}
+                {selectedPhases.some((phase) => phase.value === "L3_power") && (
+                  <Bar dataKey="L3_power" fill="url(#gradientL3_power)" radius={[15, 15, 0, 0]}/>
+                )}
+
+                {/* Total Power */}
+                {selectedPhases.some((phase) => phase.value === "total_power") && (
+                  <Bar dataKey="total_power" fill="url(#gradient_total_power)" radius={[15, 15, 0, 0]}/>
+                )}
+              </BarChart>
+            ) : (
+              // Render AreaChart for 2 days or less.
+              <AreaChart data={filteredChartData}>
+              <defs>
+                  {/* Voltage gradients */}
+                  <linearGradient id="gradientL1_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 102, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 102, 255)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(51, 153, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(51, 153, 255)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_voltage" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(102, 204, 255)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(102, 204, 255)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Current gradients */}
+                  <linearGradient id="gradientL1_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 153, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 153, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 204, 51)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 204, 51)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_current" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 255, 102)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 255, 102)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Frequency gradients */}
+                  <linearGradient id="gradientL1_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 153, 76)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 153, 76)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(51, 204, 102)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(51, 204, 102)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_frequency" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(102, 255, 153)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(102, 255, 153)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Voltage Harmonics gradients */}
+                  <linearGradient id="gradientL1_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 99, 71)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 99, 71)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Current Harmonics gradients */}
+                  <linearGradient id="gradientL1_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(0, 206, 209)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(0, 206, 209)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(72, 209, 204)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(72, 209, 204)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(32, 178, 170)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(32, 178, 170)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Power Factor gradients */}
+                  <linearGradient id="gradientL1_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(128, 128, 128)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(128, 128, 128)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(169, 169, 169)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(169, 169, 169)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_power_factor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(192, 192, 192)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(192, 192, 192)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Power gradients */}
+                  <linearGradient id="gradientL1_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 0, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 0, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL2_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+                  <linearGradient id="gradientL3_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+
+                  {/* Total Power gradient */}
+                  <linearGradient id="gradient_total_power" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="10%" stopColor="rgb(255, 165, 0)" stopOpacity={1} />
+                    <stop offset="90%" stopColor="rgb(255, 165, 0)" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
+                <XAxis
+                  dataKey="timestamp"
+                  minTickGap={40}
+                  stroke="gray"
+                  tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
+                  tickFormatter={formatXAxisLabel}
+                />
+                <YAxis
+                  stroke="gray"
+                  domain={[minY, maxY]}
+                  tickLine={true}
+                  axisLine={true}
+                  tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                {/* Voltage */}
+      {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
+        <Area
+          type="monotone"
+          dataKey="L1_voltage"
+          stroke="rgb(0, 102, 255)"
+          fill="url(#gradientL1_voltage)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
+        <Area
+          type="monotone"
+          dataKey="L2_voltage"
+          stroke="rgb(51, 153, 255)"
+          fill="url(#gradientL2_voltage)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
+        <Area
+          type="monotone"
+          dataKey="L3_voltage"
+          stroke="rgb(102, 204, 255)"
+          fill="url(#gradientL3_voltage)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Current */}
+      {selectedPhases.some((phase) => phase.value === "L1_current") && (
+        <Area
+          type="monotone"
+          dataKey="L1_current"
+          stroke="rgb(255, 153, 0)"
+          fill="url(#gradientL1_current)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_current") && (
+        <Area
+          type="monotone"
+          dataKey="L2_current"
+          stroke="rgb(255, 204, 51)"
+          fill="url(#gradientL2_current)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_current") && (
+        <Area
+          type="monotone"
+          dataKey="L3_current"
+          stroke="rgb(255, 255, 102)"
+          fill="url(#gradientL3_current)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Frequency */}
+      {selectedPhases.some((phase) => phase.value === "L1_frequency") && (
+        <Area
+          type="monotone"
+          dataKey="L1_frequency"
+          stroke="rgb(0, 153, 76)"
+          fill="url(#gradientL1_frequency)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_frequency") && (
+        <Area
+          type="monotone"
+          dataKey="L2_frequency"
+          stroke="rgb(51, 204, 102)"
+          fill="url(#gradientL2_frequency)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_frequency") && (
+        <Area
+          type="monotone"
+          dataKey="L3_frequency"
+          stroke="rgb(102, 255, 153)"
+          fill="url(#gradientL3_frequency)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Voltage Harmonics */}
+      {selectedPhases.some((phase) => phase.value === "L1_volt_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L1_volt_harmonic"
+          stroke="rgb(255, 99, 71)"
+          fill="url(#gradientL1_volt_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_volt_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L2_volt_harmonic"
+          stroke="rgb(255, 140, 0)"
+          fill="url(#gradientL2_volt_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_volt_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L3_volt_harmonic"
+          stroke="rgb(255, 69, 0)"
+          fill="url(#gradientL3_volt_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Current Harmonics */}
+      {selectedPhases.some((phase) => phase.value === "L1_curr_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L1_curr_harmonic"
+          stroke="rgb(0, 206, 209)"
+          fill="url(#gradientL1_curr_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_curr_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L2_curr_harmonic"
+          stroke="rgb(72, 209, 204)"
+          fill="url(#gradientL2_curr_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_curr_harmonic") && (
+        <Area
+          type="monotone"
+          dataKey="L3_curr_harmonic"
+          stroke="rgb(32, 178, 170)"
+          fill="url(#gradientL3_curr_harmonic)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Power Factor */}
+      {selectedPhases.some((phase) => phase.value === "L1_power_factor") && (
+        <Area
+          type="monotone"
+          dataKey="L1_power_factor"
+          stroke="rgb(128, 128, 128)"
+          fill="url(#gradientL1_power_factor)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_power_factor") && (
+        <Area
+          type="monotone"
+          dataKey="L2_power_factor"
+          stroke="rgb(169, 169, 169)"
+          fill="url(#gradientL2_power_factor)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_power_factor") && (
+        <Area
+          type="monotone"
+          dataKey="L3_power_factor"
+          stroke="rgb(192, 192, 192)"
+          fill="url(#gradientL3_power_factor)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Power */}
+      {selectedPhases.some((phase) => phase.value === "L1_power") && (
+        <Area
+          type="monotone"
+          dataKey="L1_power"
+          stroke="rgb(255, 0, 0)"
+          fill="url(#gradientL1_power)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L2_power") && (
+        <Area
+          type="monotone"
+          dataKey="L2_power"
+          stroke="rgb(255, 69, 0)"
+          fill="url(#gradientL2_power)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+      {selectedPhases.some((phase) => phase.value === "L3_power") && (
+        <Area
+          type="monotone"
+          dataKey="L3_power"
+          stroke="rgb(255, 140, 0)"
+          fill="url(#gradientL3_power)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+
+      {/* Total Power */}
+      {selectedPhases.some((phase) => phase.value === "total_power") && (
+        <Area
+          type="monotone"
+          dataKey="total_power"
+          stroke="rgb(255, 165, 0)"
+          fill="url(#gradient_total_power)"
+          strokeWidth={2}
+          dot={{ r: 2 }}
+        />
+      )}
+              </AreaChart>
+            )}
           </ResponsiveContainer>
         )}
       </div>

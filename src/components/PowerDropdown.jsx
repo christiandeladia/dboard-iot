@@ -1,12 +1,11 @@
 import React, { useState } from "react";
-import Select, { components } from "react-select";
+import Select from "react-select";
 import { FaChevronDown, FaChevronRight, FaSun, FaBolt, FaBatteryFull } from "react-icons/fa";
 
 export const groupedPhaseOptions = [
   {
     label: (
       <div className="flex items-center">
-        <FaSun className="text-yellow-500 mr-1" />
         <span>Solar</span>
       </div>
     ),
@@ -16,7 +15,6 @@ export const groupedPhaseOptions = [
     clickable: true,
     label: (
       <div className="flex items-center">
-        <FaBolt className="text-blue-500 mr-1" />
         <span>Grid</span>
       </div>
     ),
@@ -83,7 +81,6 @@ export const groupedPhaseOptions = [
   {
     label: (
       <div className="flex items-center">
-        <FaBatteryFull className="text-green-500 mr-1" />
         <span>Battery</span>
       </div>
     ),
@@ -96,7 +93,9 @@ const PowerDropdown = ({ onPhaseChange }) => {
     groupedPhaseOptions
       .flatMap((group) => group.options.flatMap((subGroup) => subGroup.options))
       .find((phase) => phase.value === "total_power") || null;
-  const [selectedPhases, setSelectedPhases] = useState(defaultSelection ? [defaultSelection] : []);
+  const [selectedPhases, setSelectedPhases] = useState(
+    defaultSelection ? [defaultSelection] : []
+  );
   const [expandedSubGroups, setExpandedSubGroups] = useState({});
 
   const toggleSubGroup = (subGroupLabel) => {
@@ -106,12 +105,25 @@ const PowerDropdown = ({ onPhaseChange }) => {
     }));
   };
 
+  // When a subgroup label (e.g., "Voltage") is clicked, add all its options to the selection.
+  const handleSelectSubGroup = (subGroupOptions) => {
+    // Add options that are not already selected.
+    const newSelections = subGroupOptions.filter(
+      (opt) => !selectedPhases.some((selected) => selected.value === opt.value)
+    );
+    const updatedSelections = [...selectedPhases, ...newSelections];
+    setSelectedPhases(updatedSelections);
+    if (onPhaseChange) {
+      onPhaseChange(updatedSelections);
+    }
+  };
+
   const handlePhaseChange = (selected) => {
     setSelectedPhases(selected);
     onPhaseChange(selected);
   };
 
-  // When Grid label is clicked, reset the selection to only default (Total Power).
+  // When the Grid header is clicked, reset the selection to only default (Total Power).
   const handleGridClick = () => {
     if (defaultSelection) {
       handlePhaseChange([defaultSelection]);
@@ -119,17 +131,17 @@ const PowerDropdown = ({ onPhaseChange }) => {
   };
 
   // Custom MenuList renders a responsive layout.
-  const CustomMenuList = (props) => {
+  const CustomMenuList = () => {
     return (
       <div className="p-2 w-full" style={{ maxHeight: "500px", overflowY: "auto" }}>
         <div className="flex flex-wrap w-full">
           {groupedPhaseOptions.map((group, groupIdx) => (
             <div
               key={groupIdx}
-              className="flex flex-col items-center w-full sm:w-1/3 p-2 border-r-1 last:border-r-0 border-gray-300"
+              className="flex flex-col items-center w-full sm:w-1/3 p-2"
             >
               <div
-                className={`text-md font-semibold text-gray-800 flex items-center w-full justify-center ${
+                className={`text-lg font-semibold text-gray-800 flex items-left w-full px-5 ${
                   group.clickable ? "cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded" : ""
                 }`}
                 onClick={group.clickable ? handleGridClick : undefined}
@@ -137,19 +149,28 @@ const PowerDropdown = ({ onPhaseChange }) => {
                 {group.label}
               </div>
               {/* Vertical column for subgroups */}
-              <div className="flex flex-col mt-1 space-y-2 w-full px-5">
+              <div className="flex flex-col mt-1 space-y-1 w-full px-5">
                 {group.options.map((subGroup) => (
                   <div key={subGroup.label} className="flex flex-col items-center w-full">
-                    <div
-                      className="cursor-pointer flex items-center text-md w-full justify-between"
-                      onClick={() => toggleSubGroup(subGroup.label)}
-                    >
-                      <span className="text-left">{subGroup.label}</span>
-                      {expandedSubGroups[subGroup.label] ? (
-                        <FaChevronDown />
-                      ) : (
-                        <FaChevronRight />
-                      )}
+                    <div className="flex items-center text-md w-full justify-between">
+                      {/* Label text: clicking this will select all subgroup options */}
+                      <span
+                        className="cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded w-full p-1"
+                        onClick={() => handleSelectSubGroup(subGroup.options)}
+                      >
+                        {subGroup.label}
+                      </span>
+                      {/* Chevron: clicking this toggles the dropdown view */}
+                      <span
+                        className="cursor-pointer hover:bg-gray-100 rounded p-2"
+                        onClick={() => toggleSubGroup(subGroup.label)}
+                      >
+                        {expandedSubGroups[subGroup.label] ? (
+                          <FaChevronDown />
+                        ) : (
+                          <FaChevronRight />
+                        )}
+                      </span>
                     </div>
                     {expandedSubGroups[subGroup.label] && (
                       <div className="flex flex-col mt-1 w-full">
@@ -163,14 +184,14 @@ const PowerDropdown = ({ onPhaseChange }) => {
                           .map((option) => (
                             <div
                               key={option.value}
-                              className="cursor-pointer text-sm p-1 ps-3 hover:bg-gray-200 rounded w-full justify-center"
+                              className="cursor-pointer text-sm p-1 ps-3 hover:bg-gray-200 rounded w-full"
                               onClick={() =>
                                 handlePhaseChange([...selectedPhases, option])
                               }
                             >
                               <div className="flex items-center">
                                 <span
-                                  className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                                  className="w-3 h-3 rounded-full mr-2"
                                   style={{ backgroundColor: option.color }}
                                 ></span>
                                 {option.label}
@@ -228,6 +249,7 @@ const PowerDropdown = ({ onPhaseChange }) => {
     <div className="flex items-center space-x-4 w-200">
       <Select
         isMulti
+        isSearchable={false}
         value={selectedPhases}
         onChange={handlePhaseChange}
         options={[]} // Options are rendered via CustomMenuList.

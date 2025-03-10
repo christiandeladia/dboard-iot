@@ -82,6 +82,7 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
           <div className="flex items-center bg-white">
             {plants.length > 0 ? (
               <Select
+                isSearchable={false}
                 options={plants}
                 value={selectedPlant}
                 onChange={handleChange}
