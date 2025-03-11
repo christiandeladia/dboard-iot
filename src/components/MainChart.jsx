@@ -17,6 +17,7 @@ import PowerDropdown from "../components/PowerDropdown";
 import { groupedPhaseOptions } from "../components/PowerDropdown";
 import CustomTooltip from "../components/CustomTooltip";
 import { groupAndAverage, formatXAxisLabel } from "../utils/dataUtils";
+import { LoadingSkeleton } from "../components/LoadingSkeleton";
 
 const MainChart = ({ selectedPlant }) => {
   const [selectedDates, setSelectedDates] = useState(null);
@@ -30,6 +31,7 @@ const MainChart = ({ selectedPlant }) => {
     totalPowerOption ? [totalPowerOption] : []
   );
   const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -41,6 +43,7 @@ const MainChart = ({ selectedPlant }) => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const fetchedData = querySnapshot.docs.map((doc) => doc.data());
       setData(fetchedData);
+      setIsLoading(false);
     });
     return () => unsubscribe();
   }, [selectedPlant]);
@@ -180,7 +183,9 @@ const MainChart = ({ selectedPlant }) => {
       </div>
 
       <div className="flex-1">
-        {filteredChartData.length === 0 ? (
+      {isLoading ? (
+          <LoadingSkeleton />
+        ) : filteredChartData.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-600 text-lg font-semibold">No Data Found</p>
           </div>

@@ -1,29 +1,22 @@
 import React from "react";
+import { groupedPhaseOptions } from "../components/PowerDropdown"; // adjust import path as needed
 
-// Map each data key to a solid base color
-const phaseBaseColorMapping = {
-  L1_voltage: "rgb(0, 102, 255)",
-  L2_voltage: "rgb(51, 153, 255)",
-  L3_voltage: "rgb(102, 204, 255)",
-  L1_current: "rgb(255, 153, 0)",
-  L2_current: "rgb(255, 204, 51)",
-  L3_current: "rgb(255, 255, 102)",
-  L1_frequency: "rgb(0, 153, 76)",
-  L2_frequency: "rgb(51, 204, 102)",
-  L3_frequency: "rgb(102, 255, 153)",
-  L1_volt_harmonic: "rgb(255, 99, 71)",
-  L2_volt_harmonic: "rgb(255, 140, 0)",
-  L3_volt_harmonic: "rgb(255, 69, 0)",
-  L1_curr_harmonic: "rgb(0, 206, 209)",
-  L2_curr_harmonic: "rgb(72, 209, 204)",
-  L3_curr_harmonic: "rgb(32, 178, 170)",
-  L1_power_factor: "rgb(128, 128, 128)",
-  L2_power_factor: "rgb(169, 169, 169)",
-  L3_power_factor: "rgb(192, 192, 192)",
-  L1_power: "rgb(255, 0, 0)",
-  L2_power: "rgb(255, 69, 0)",
-  L3_power: "rgb(255, 140, 0)",
-  total_power: "rgb(255, 165, 0)",
+// Helper function to search for an option based on its value.
+const getPhaseOption = (phaseValue) => {
+  for (const group of groupedPhaseOptions) {
+    if (group.options && group.options.length > 0) {
+      for (const category of group.options) {
+        if (category.options && category.options.length > 0) {
+          for (const option of category.options) {
+            if (option.value === phaseValue) {
+              return option;
+            }
+          }
+        }
+      }
+    }
+  }
+  return null;
 };
 
 const CustomTooltip = ({ active, payload }) => {
@@ -73,20 +66,26 @@ const CustomTooltip = ({ active, payload }) => {
     <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
       <p className="text-gray-700 font-semibold">{formattedDate}</p>
       {payload.map((item, index) => {
-        let unit = "V"; // Default unit
-        if (item.name.includes("current")) unit = "A";
-        if (item.name.includes("frequency")) unit = "Hz";
-        if (item.name.includes("power_factor")) unit = "PF";
-        if (item.name.includes("curr_harmonic") || item.name.includes("volt_harmonic"))
-          unit = "%";
-        if (item.name.includes("_power")) unit = "kW";
+        // Use item.name (which should match the option value) to look up the option.
+        const option = getPhaseOption(item.name);
+        const displayLabel = option ? option.label : item.name;
+        const indicatorColor = option ? option.color : "black";
 
-        // Look up the base color from our mapping.
-        // Ensure that item.name matches the keys in phaseBaseColorMapping.
-        const indicatorColor = phaseBaseColorMapping[item.name] || "black";
+        // Determine unit based on displayLabel.
+        let unit = "V"; // Default
+        const lowerLabel = displayLabel.toString().toLowerCase();
+        if (lowerLabel.includes("current")) unit = "A";
+        if (lowerLabel.includes("frequency")) unit = "Hz";
+        if (lowerLabel.includes("power factor")) unit = "PF";
+        if (lowerLabel.includes("harmonic")) unit = "%";
+        // Ensure that 'power factor' check comes before power.
+        if (lowerLabel.includes("power") && !lowerLabel.includes("power factor")) unit = "kW";
 
         return (
-          <p key={index} className="text-gray-600 flex items-start flex-col leading-tight pt-2">
+          <p
+            key={index}
+            className="text-gray-600 flex items-start flex-col leading-tight pt-2"
+          >
             <span className="flex items-center">
               <span
                 style={{
@@ -98,11 +97,12 @@ const CustomTooltip = ({ active, payload }) => {
                   marginRight: "5px",
                 }}
               ></span>
-              <span className="font-semibold text-sm">{item.name} ({unit})</span>
+              <span className="font-semibold text-sm">
+                {displayLabel} ({unit})
+              </span>
             </span>
             <span className="font-bold">{item.value}</span>
           </p>
-
         );
       })}
     </div>

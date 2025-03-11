@@ -3,32 +3,35 @@ import logo from "../assets/img/logo/logo.png";
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import { getDoc, doc } from "firebase/firestore";
-import { db } from "../Config"; // Import Firestore instance
+import { db } from "../Config";
+import {NavbarLoadingSkeleton} from "../components/LoadingSkeleton";
 
 const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
   const [plants, setPlants] = useState([]);
   const [selectedPlant, setLocalSelectedPlant] = useState(null);
+  const [isPlantsLoading, setIsPlantsLoading] = useState(true);
 
-  // Fetch plant names from Firestore
+  // Fetch plant names from Firestore only when userData is available
   useEffect(() => {
+    if (!userData) return; // Wait until userData is provided
     const fetchPlants = async () => {
-      if (userData?.plants && userData.plants.length > 0) {
+      if (userData.plants && userData.plants.length > 0) {
         const plantPromises = userData.plants.map(async (plantRef) => {
-          const plantDoc = await getDoc(doc(db, "plants", plantRef.id)); // Fetch plant document
+          const plantDoc = await getDoc(doc(db, "plants", plantRef.id));
           return plantDoc.exists()
             ? { value: plantRef.id, label: plantDoc.data().plant_name }
-            : { value: plantRef.id, label: "Unknown Plant" }; // Fallback for missing data
+            : { value: plantRef.id, label: "Unknown Plant" };
         });
-
         const plantList = await Promise.all(plantPromises);
         setPlants(plantList);
 
-        // ✅ Set default selection to the first plant if available
+        // Set default selection to the first plant if available
         if (plantList.length > 0) {
-          setLocalSelectedPlant(plantList[0]); // Set state for local dropdown
-          setSelectedPlant(plantList[0].value); // Set the parent state
+          setLocalSelectedPlant(plantList[0]);
+          setSelectedPlant(plantList[0].value);
         }
       }
+      setIsPlantsLoading(false);
     };
 
     fetchPlants();
@@ -62,7 +65,11 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
       ...provided,
       padding: "5px",
       borderRadius: "4px",
-      backgroundColor: state.isSelected ? "#2563eb" : state.isFocused ? "#eff6ff" : "white",
+      backgroundColor: state.isSelected
+        ? "#2563eb"
+        : state.isFocused
+        ? "#eff6ff"
+        : "white",
       color: state.isSelected ? "white" : "#374151",
       "&:hover": { backgroundColor: "#eff6ff", color: "#2563eb" },
     }),
@@ -80,7 +87,9 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
       <div className="flex items-center gap-4">
         {user && (
           <div className="flex items-center bg-white">
-            {plants.length > 0 ? (
+            {(!userData || isPlantsLoading) ? (
+              <NavbarLoadingSkeleton />
+            ) : plants.length > 0 ? (
               <Select
                 isSearchable={false}
                 options={plants}
