@@ -8,6 +8,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  LabelList,
   ResponsiveContainer,
 } from "recharts";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
@@ -38,6 +39,8 @@ const MainChart = ({ selectedPlant }) => {
   );
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hoveredPhase, setHoveredPhase] = useState(null);
+  const [hoveredPhaseValue, setHoveredPhaseValue] = useState(null);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -412,7 +415,11 @@ const combinedData = useMemo(() => {
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-4">
-      <PowerDropdown onPhaseChange={setSelectedPhases} limitToOne={selectedDates && diffInDays >= 2 && diffInDays <= 7} />
+      <PowerDropdown
+        onPhaseChange={setSelectedPhases}
+        onPhaseHover={setHoveredPhase}  // <-- new prop for hover events
+        limitToOne={selectedDates && diffInDays >= 2 && diffInDays <= 7}
+      />
 
 
         <div className="flex items-center space-x-4">
@@ -470,14 +477,28 @@ const combinedData = useMemo(() => {
                 <Tooltip content={<CustomTooltip />} />
                 {selectedPhases.map((phase) => (
                   <Area
-                    key={`area_${phase.value}`}
-                    type="monotone"
-                    dataKey={phase.value} 
-                    stroke={phase.color}
-                    fill={`url(#areaGradient_${phase.value})`}
-                    strokeWidth={2}
-                    dot={{ r: 2 }}
-                  />
+                  key={`area_${phase.value}`}
+                  type="monotone"
+                  dataKey={phase.value}
+                  stroke={phase.color}
+                  fill={`url(#areaGradient_${phase.value})`}
+                  strokeWidth={hoveredPhase === phase.value ? 4 : 2}
+                  dot={{ r: 2 }}
+                  style={{
+                    filter: hoveredPhase && hoveredPhase !== phase.value ? "grayscale(100%)" : "none",
+                    opacity: hoveredPhase && hoveredPhase !== phase.value ? 0.3 : 1,
+                  }}
+                >
+                  {hoveredPhase === phase.value && (
+                    <LabelList
+                      dataKey={phase.value}
+                      position="top"
+                      fill="black"
+                      fontSize={12}
+                      textAnchor="middle"
+                    />
+                  )}
+                </Area>
                 ))}
               </AreaChart>
             ) : diffInDays > 7 ? (
@@ -520,7 +541,21 @@ const combinedData = useMemo(() => {
                     dataKey={phase.value}
                     fill={`url(#barGradient_${phase.value})`}
                     radius={[15, 15, 0, 0]}
-                  />
+                    style={{
+                      filter: hoveredPhase && hoveredPhase !== phase.value ? "grayscale(100%)" : "none",
+                      opacity: hoveredPhase && hoveredPhase !== phase.value ? 0.3 : 1,
+                    }}
+                  >
+                    {hoveredPhase === phase.value && (
+                      <LabelList
+                        dataKey={phase.value}
+                        position="top"
+                        fill="black"
+                        fontSize="12"
+                        textAnchor="middle"
+                      />
+                    )}
+                  </Bar>
                 ))}
               </BarChart>
             ) : (

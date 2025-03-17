@@ -95,7 +95,7 @@ export const groupedPhaseOptions = [
 ];
 
 
-const PowerDropdown = ({ onPhaseChange, limitToOne = false }) => {
+const PowerDropdown = ({ onPhaseChange, onPhaseHover, limitToOne = false }) => {
   const defaultSelection =
     groupedPhaseOptions
       .flatMap((group) => group.options.flatMap((subGroup) => subGroup.options))
@@ -300,7 +300,11 @@ const PowerDropdown = ({ onPhaseChange, limitToOne = false }) => {
         placeholder="Select phases..."
         getOptionLabel={(e) =>
           e.color ? (
-            <div className="flex items-center">
+            <div
+              className="flex items-center"
+              onMouseEnter={() => onPhaseHover && onPhaseHover(e.value)}
+              onMouseLeave={() => onPhaseHover && onPhaseHover(null)}
+            >
               <span
                 className="w-3 h-3 rounded-full mr-1"
                 style={{ backgroundColor: e.color }}

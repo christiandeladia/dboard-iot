@@ -63,7 +63,7 @@ const CustomTooltip = ({ active, payload }) => {
   }
 
   return (
-    <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg">
+    <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg pointer-events-none">
       <p className="text-gray-700 font-semibold">{formattedDate}</p>
       {payload.map((item, index) => {
         // Use item.name (which should match the option value) to look up the option.
