@@ -2,7 +2,31 @@ import React, { useState, useRef, useEffect } from "react";
 import { DateRange } from "react-date-range";
 import "react-date-range/dist/styles.css"; // Main styles
 import "react-date-range/dist/theme/default.css"; // Theme styles
-import { FaAngleLeft, FaAngleRight, FaChevronDown, FaClock, FaForward  } from "react-icons/fa";
+import { FaAngleLeft, FaAngleRight, FaChevronDown, FaChevronRight, FaClock, FaChartBar } from "react-icons/fa";
+import { BsLayoutSidebarInsetReverse } from "react-icons/bs";
+import { groupedPhaseOptions } from "../components/PowerDropdown";
+
+
+// CustomDropdown component using chevrons from react-icons
+const CustomDropdown = ({ label, labelAvg, children }) => {
+  const [open, setOpen] = useState(false);
+  return (
+<div className="mb-2">
+  <div
+    onClick={() => setOpen(!open)}
+    className="cursor-pointer font-semibold flex items-center justify-between"
+  >
+    <span>{label}</span>
+    <div className="flex items-center justify-start">
+      <span>{labelAvg}</span>
+      {open ? <FaChevronDown className="ml-1" /> : <FaChevronRight className="ml-1" />}
+    </div>
+  </div>
+  {open && <div className="pl-4">{children}</div>}
+</div>
+
+  );
+};
 
 const options = [
   { value: "today", label: "Today" },
@@ -11,10 +35,11 @@ const options = [
   { value: "custom", label: "Custom" },
 ];
 
-const DateDropdown = ({ onDateSelect }) => {
+const DateDropdown = ({ onDateSelect, onChartTypeChange, overallAverages }) => {
   const [selectedOption, setSelectedOption] = useState(options[0]); // default: Today
   const [showMenu, setShowMenu] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false); // NEW: Sidebar toggle
 
   // Date range state (using an array with one selection object)
   const [dateRange, setDateRange] = useState([
@@ -26,6 +51,16 @@ const DateDropdown = ({ onDateSelect }) => {
   ]);
   // Temporary state for custom selections
   const [tempDateRange, setTempDateRange] = useState(dateRange);
+
+  // Chart type state: "area" or "bar"
+  const [chartType, setChartType] = useState("area");
+
+  // Toggle between area and bar chart types.
+  const toggleChartType = () => {
+    const newType = chartType === "area" ? "bar" : "area";
+    setChartType(newType);
+    if (onChartTypeChange) onChartTypeChange(newType);
+  };
 
   const handleOptionSelect = (option) => {
     setSelectedOption(option);
@@ -116,6 +151,9 @@ const DateDropdown = ({ onDateSelect }) => {
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
 
+  // Calculate difference in days between start and end date.
+  const diffDays = (dateRange[0].endDate - dateRange[0].startDate) / (1000 * 60 * 60 * 24);
+
   // Display text on the dropdown button.
   const displayText = () => {
     if (selectedOption.value === "custom") {
@@ -138,35 +176,26 @@ const DateDropdown = ({ onDateSelect }) => {
       }
       return selectedDate.toDateString();
     } else if (selectedOption.value === "last24") {
-      // Instead of showing the date range, display text with an icon.
-      return (
-        <span>
-           Last 24 Hours
-        </span>
-      );
+      return <span>Last 24 Hours</span>;
     } else if (selectedOption.value === "future") {
       return (
-
-          <span className="flex items-center justify-start">
-
+        <span className="flex items-center justify-start">
           <FaClock
             className="inline-block mr-1"
             style={{
               fill: "url(#cyan-blue-gradient)",
             }}
-          />Future
+          />
+          Future
           <svg width="0" height="0">
             <defs>
               <linearGradient id="cyan-blue-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#06b6d4" /> {/* Cyan */}
-                <stop offset="100%" stopColor="#3b82f6" /> {/* Blue */}
+                <stop offset="0%" stopColor="#06b6d4" />
+                <stop offset="100%" stopColor="#3b82f6" />
               </linearGradient>
             </defs>
           </svg>
-
-          </span>
-
-
+        </span>
       );
     }
     return selectedOption.label;
@@ -189,8 +218,71 @@ const DateDropdown = ({ onDateSelect }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+ // Helper function to render the sidebar layout using groupedPhaseOptions.
+ const renderSidebar = () => {
+  return groupedPhaseOptions.map((group, i) => (
+    <div key={i} className="mb-10">
+      <div className="font-bold text-xl mb-3">{group.label}</div>
+      {group.options && group.options.length > 0 ? (
+        group.options.map((subgroup, j) => {
+          const subgroupLabel = subgroup.label;
+          const values = subgroup.options.map(
+            (option) => overallAverages?.[option.value]
+          );
+          const validValues = values.filter((v) => v !== null && v !== undefined);
+          const avg =
+            validValues.length > 0
+              ? parseFloat(
+                  (
+                    validValues.reduce((sum, v) => sum + v, 0) /
+                    validValues.length
+                  ).toFixed(2)
+                )
+              : null;
+          return (
+            <CustomDropdown
+              key={j}
+              label={
+                <>
+                  {typeof subgroupLabel === "string"
+                    ? subgroupLabel
+                    : subgroupLabel}
+                </>
+              }
+              labelAvg={
+                <>
+                  {avg !== null && (
+                    <span className="text-sm text-gray-600"> (Average: {avg})</span>
+                  )}
+                </>
+              }
+            >
+              {subgroup.options.map((option) => (
+                <div key={option.value} className="flex justify-between pb-1 w-9/10">
+                  <span className="text-gray-700">{option.label}:</span>
+                  <span className="text-gray-700 font-semibold">
+                    {overallAverages && overallAverages[option.value] != null
+                      ? overallAverages[option.value]
+                      : "N/A"}
+                  </span>
+                </div>
+              ))}
+
+            </CustomDropdown>
+          );
+        })
+      ) : (
+        <p className="ml-4 text-gray-700">No options available</p>
+      )}
+    </div>
+  ));
+};
+
+
+
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 relative">
       {/* Custom Dropdown Button */}
       <div className="relative" ref={dropdownRef}>
         <button
@@ -212,20 +304,21 @@ const DateDropdown = ({ onDateSelect }) => {
               >
                 {option.value === "future" ? (
                   <span className="flex items-center justify-start">
-                              <FaClock
-            className="inline-block mr-1"
-            style={{
-              fill: "url(#cyan-blue-gradient)",
-            }}
-          />Future
-          <svg width="0" height="0">
-            <defs>
-              <linearGradient id="cyan-blue-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#06b6d4" /> {/* Cyan */}
-                <stop offset="100%" stopColor="#3b82f6" /> {/* Blue */}
-              </linearGradient>
-            </defs>
-          </svg>
+                    <FaClock
+                      className="inline-block mr-1"
+                      style={{
+                        fill: "url(#cyan-blue-gradient)",
+                      }}
+                    />
+                    Future
+                    <svg width="0" height="0">
+                      <defs>
+                        <linearGradient id="cyan-blue-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#06b6d4" />
+                          <stop offset="100%" stopColor="#3b82f6" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
                   </span>
                 ) : (
                   option.label
@@ -236,22 +329,63 @@ const DateDropdown = ({ onDateSelect }) => {
         )}
       </div>
 
-      {/* Left/Right Navigation Buttons (only for non-Custom when a single-day range is selected) */}
+      {/* Navigation Buttons for non-custom single day range */}
       {showNavigationButtons && (
         <>
           <button
             onClick={() => shiftDate("left")}
+            title={"Previous Date"}
             className="px-3 py-3 bg-white border border-gray-300 shadow-md rounded hover:bg-gray-200 transition"
           >
             <FaAngleLeft />
           </button>
           <button
             onClick={() => shiftDate("right")}
+            title={"Next Date"}
             className="px-3 py-3 bg-white border border-gray-300 shadow-md rounded hover:bg-gray-200 transition"
           >
             <FaAngleRight />
           </button>
         </>
+      )}
+
+      {/* Chart Toggle Button for Custom Date Range */}
+      {selectedOption.value === "custom" && diffDays >= 2 && (
+        <button
+          onClick={toggleChartType}
+          disabled={diffDays > 7}
+          title={diffDays > 7 ? "Chart toggle disabled for ranges longer than 8 days" : "Chart Toggle"}
+          className={`px-3 py-3 bg-white border border-gray-300 shadow-md rounded transition ${
+            diffDays > 7 ? "cursor-not-allowed opacity-50" : "hover:bg-gray-200"
+          }`}
+        >
+          <FaChartBar className={chartType === "bar" ? "text-blue-500" : "text-gray-500"} />
+        </button>
+      )}
+
+      {/* Toggle Sidebar Button */}
+      <button
+        onClick={() => setShowSidebar(!showSidebar)}
+        title={"View Data List"}
+        className="px-3 py-3 bg-white border border-gray-300 shadow-md rounded hover:bg-gray-200 transition me-0"
+      >
+        <BsLayoutSidebarInsetReverse className="text-gray-500" />
+      </button>
+
+      {/* Sidebar */}
+      {showSidebar && (
+        <div className="fixed right-0 top-0 h-full w-90 bg-white shadow-lg z-50 p-4 overflow-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold"></h3>
+            <button onClick={() => setShowSidebar(false)} className="text-gray-600 text-2xl">
+              &times;
+            </button>
+          </div>
+          <p className="text-gray-700 font-bold mb-5 pb-2 border-b border-gray-400">
+            {displayText()}
+          </p>
+          {overallAverages ? renderSidebar() : <p className="text-gray-700">No data available</p>}
+        </div>
       )}
 
       {/* Modal for Custom Date Range */}
