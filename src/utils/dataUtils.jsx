@@ -27,36 +27,49 @@ export const groupAndAverage = (data, getKey) => {
 
     const groupedEntry = {
       timestamp: key, // Grouped key (Day or Month)
+      // Voltage
       L1_voltage: avg(values.map((v) => v.voltages_avg?.L1 ?? null)),
       L2_voltage: avg(values.map((v) => v.voltages_avg?.L2 ?? null)),
       L3_voltage: avg(values.map((v) => v.voltages_avg?.L3 ?? null)),
-
+      total_voltage: avg(values.map((v) => v.voltages_avg?.total ?? null)),
+    
+      // Current
       L1_current: avg(values.map((v) => v.currents_avg?.L1 ?? null)),
       L2_current: avg(values.map((v) => v.currents_avg?.L2 ?? null)),
       L3_current: avg(values.map((v) => v.currents_avg?.L3 ?? null)),
-
+      total_current: avg(values.map((v) => v.currents_avg?.total ?? null)),
+    
+      // Frequency
       L1_frequency: avg(values.map((v) => v.frequencies_avg?.L1 ?? null)),
       L2_frequency: avg(values.map((v) => v.frequencies_avg?.L2 ?? null)),
       L3_frequency: avg(values.map((v) => v.frequencies_avg?.L3 ?? null)),
-
+      total_frequency: avg(values.map((v) => v.frequencies_avg?.total ?? null)),
+    
+      // Power Factor
       L1_power_factor: avg(values.map((v) => v.power_factors_avg?.L1 ?? null)),
       L2_power_factor: avg(values.map((v) => v.power_factors_avg?.L2 ?? null)),
       L3_power_factor: avg(values.map((v) => v.power_factors_avg?.L3 ?? null)),
-
+      total_power_factor: avg(values.map((v) => v.power_factors_avg?.total ?? null)),
+    
+      // Voltage Harmonics
       L1_volt_harmonic: avg(values.map((v) => v.voltage_harmonics_avg?.L1 ?? null)),
       L2_volt_harmonic: avg(values.map((v) => v.voltage_harmonics_avg?.L2 ?? null)),
       L3_volt_harmonic: avg(values.map((v) => v.voltage_harmonics_avg?.L3 ?? null)),
-
+      total_volt_harmonic: avg(values.map((v) => v.voltage_harmonics_avg?.total ?? null)),
+    
+      // Current Harmonics
       L1_curr_harmonic: avg(values.map((v) => v.current_harmonics_avg?.L1 ?? null)),
       L2_curr_harmonic: avg(values.map((v) => v.current_harmonics_avg?.L2 ?? null)),
       L3_curr_harmonic: avg(values.map((v) => v.current_harmonics_avg?.L3 ?? null)),
-
-      // ✅ Power (Ensures null values do not replace existing valid values)
+      total_curr_harmonic: avg(values.map((v) => v.current_harmonics_avg?.total ?? null)),
+    
+      // Power
       L1_power: avg(values.map((v) => v.power?.L1 ?? null)),
       L2_power: avg(values.map((v) => v.power?.L2 ?? null)),
       L3_power: avg(values.map((v) => v.power?.L3 ?? null)),
       total_power: avg(values.map((v) => v.power?.total ?? null)),
     };
+    
 
     // ✅ Remove timestamps where all selected components are null
     const hasValidData = Object.keys(groupedEntry).some(

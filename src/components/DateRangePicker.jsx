@@ -227,7 +227,11 @@ const DateDropdown = ({ onDateSelect, onChartTypeChange, overallAverages }) => {
       {group.options && group.options.length > 0 ? (
         group.options.map((subgroup, j) => {
           const subgroupLabel = subgroup.label;
-          const values = subgroup.options.map(
+          // Filter out any option that is a "total" so we only average L1, L2, L3
+          const phaseOptions = subgroup.options.filter(
+            (option) => !option.value.toLowerCase().includes("total")
+          );
+          const values = phaseOptions.map(
             (option) => overallAverages?.[option.value]
           );
           const validValues = values.filter((v) => v !== null && v !== undefined);
@@ -243,13 +247,7 @@ const DateDropdown = ({ onDateSelect, onChartTypeChange, overallAverages }) => {
           return (
             <CustomDropdown
               key={j}
-              label={
-                <>
-                  {typeof subgroupLabel === "string"
-                    ? subgroupLabel
-                    : subgroupLabel}
-                </>
-              }
+              label={<>{typeof subgroupLabel === "string" ? subgroupLabel : subgroupLabel}</>}
               labelAvg={
                 <>
                   {avg !== null && (
@@ -268,7 +266,6 @@ const DateDropdown = ({ onDateSelect, onChartTypeChange, overallAverages }) => {
                   </span>
                 </div>
               ))}
-
             </CustomDropdown>
           );
         })

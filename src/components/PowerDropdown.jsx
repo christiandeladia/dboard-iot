@@ -25,6 +25,7 @@ export const groupedPhaseOptions = [
           { value: "L1_voltage", label: "L1 Voltage", color: "rgb(0, 102, 255)" },
           { value: "L2_voltage", label: "L2 Voltage", color: "rgb(51, 153, 255)" },
           { value: "L3_voltage", label: "L3 Voltage", color: "rgb(102, 204, 255)" },
+          { value: "total_voltage", label: "Total Voltage", color: "rgb(0, 0, 255)" }
         ],
       },
       {
@@ -33,6 +34,7 @@ export const groupedPhaseOptions = [
           { value: "L1_current", label: "L1 Current", color: "rgb(255, 153, 0)" },
           { value: "L2_current", label: "L2 Current", color: "rgb(255, 204, 51)" },
           { value: "L3_current", label: "L3 Current", color: "rgb(255, 255, 102)" },
+          { value: "total_current", label: "Total Current", color: "rgb(255, 128, 0)" }
         ],
       },
       {
@@ -41,6 +43,7 @@ export const groupedPhaseOptions = [
           { value: "L1_frequency", label: "L1 Frequency", color: "rgb(0, 153, 76)" },
           { value: "L2_frequency", label: "L2 Frequency", color: "rgb(51, 204, 102)" },
           { value: "L3_frequency", label: "L3 Frequency", color: "rgb(102, 255, 153)" },
+          { value: "total_frequency", label: "Total Frequency", color: "rgb(0, 255, 76)" }
         ],
       },
       {
@@ -49,6 +52,7 @@ export const groupedPhaseOptions = [
           { value: "L1_volt_harmonic", label: "L1 Voltage Harmonics", color: "rgb(255, 99, 71)" },
           { value: "L2_volt_harmonic", label: "L2 Voltage Harmonics", color: "rgb(255, 140, 0)" },
           { value: "L3_volt_harmonic", label: "L3 Voltage Harmonics", color: "rgb(255, 69, 0)" },
+          { value: "total_volt_harmonic", label: "Total Voltage Harmonics", color: "rgb(255, 50, 0)" }
         ],
       },
       {
@@ -57,23 +61,25 @@ export const groupedPhaseOptions = [
           { value: "L1_curr_harmonic", label: "L1 Current Harmonics", color: "rgb(0, 206, 209)" },
           { value: "L2_curr_harmonic", label: "L2 Current Harmonics", color: "rgb(72, 209, 204)" },
           { value: "L3_curr_harmonic", label: "L3 Current Harmonics", color: "rgb(32, 178, 170)" },
+          { value: "total_curr_harmonic", label: "Total Current Harmonics", color: "rgb(0, 150, 170)" }
         ],
       },
       {
         label: "Power Factor",
         options: [
-          { value: "L1_power_factor", label: "L1 Power Factor", color: "rgb(128, 128, 128)" },
-          { value: "L2_power_factor", label: "L2 Power Factor", color: "rgb(169, 169, 169)" },
-          { value: "L3_power_factor", label: "L3 Power Factor", color: "rgb(192, 192, 192)" },
+          { value: "L1_power_factor", label: "L1 Power Factor", color: "rgb(189,183,107)" },   // Dark Khaki
+          { value: "L2_power_factor", label: "L2 Power Factor", color: "rgb(240,230,140)" },   // Khaki
+          { value: "L3_power_factor", label: "L3 Power Factor", color: "rgb(218,165,32)" },    // Goldenrod
+          { value: "total_power_factor", label: "Total Power Factor", color: "rgb(184,134,11)" }, // Dark Goldenrod
         ],
       },
       {
         label: "Power",
         options: [
-          { value: "L1_power", label: "L1 Power", color: "rgb(255, 0, 0)" },
-          { value: "L2_power", label: "L2 Power", color: "rgb(255, 69, 0)" },
-          { value: "L3_power", label: "L3 Power", color: "rgb(255, 140, 0)" },
-          { value: "total_power", label: "Total Power", color: "rgb(255, 165, 0)" },
+          { value: "L1_power", label: "L1 Power", color: "rgb(128, 0, 128)" },
+          { value: "L2_power", label: "L2 Power", color: "rgb(75, 0, 130)" },
+          { value: "L3_power", label: "L3 Power", color: "rgb(138, 43, 226)" },
+          { value: "total_power", label: "Total Power", color: "rgb(147, 112, 219)" }
         ],
       },
     ],
@@ -87,6 +93,7 @@ export const groupedPhaseOptions = [
     options: [],
   },
 ];
+
 
 const PowerDropdown = ({ onPhaseChange, limitToOne = false }) => {
   const defaultSelection =
