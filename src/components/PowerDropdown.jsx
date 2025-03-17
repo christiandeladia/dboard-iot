@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
-import { FaChevronDown, FaChevronRight, FaSun, FaBolt, FaBatteryFull } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 
 export const groupedPhaseOptions = [
   {
@@ -88,7 +88,7 @@ export const groupedPhaseOptions = [
   },
 ];
 
-const PowerDropdown = ({ onPhaseChange }) => {
+const PowerDropdown = ({ onPhaseChange, limitToOne = false }) => {
   const defaultSelection =
     groupedPhaseOptions
       .flatMap((group) => group.options.flatMap((subGroup) => subGroup.options))
@@ -105,22 +105,55 @@ const PowerDropdown = ({ onPhaseChange }) => {
     }));
   };
 
-  // When a subgroup label (e.g., "Voltage") is clicked, add all its options to the selection.
+  useEffect(() => {
+    if (limitToOne && selectedPhases.length > 1) {
+      const limitedSelection = selectedPhases.slice(0, 1);
+      setSelectedPhases(limitedSelection);
+      if (onPhaseChange) {
+        onPhaseChange(limitedSelection);
+      }
+    }
+  }, [limitToOne, selectedPhases, onPhaseChange]);
+
+  // When a subgroup label is clicked, add all its options to the selection.
   const handleSelectSubGroup = (subGroupOptions) => {
-    // Add options that are not already selected.
-    const newSelections = subGroupOptions.filter(
-      (opt) => !selectedPhases.some((selected) => selected.value === opt.value)
+    // Look for the "total" option in this subgroup.
+    const totalOption = subGroupOptions.find(
+      (option) => option.value.includes("total")
     );
-    const updatedSelections = [...selectedPhases, ...newSelections];
-    setSelectedPhases(updatedSelections);
-    if (onPhaseChange) {
-      onPhaseChange(updatedSelections);
+    if (totalOption) {
+      if (limitToOne) {
+        // When limitToOne is true, simply replace the current selection.
+        setSelectedPhases([totalOption]);
+        if (onPhaseChange) {
+          onPhaseChange([totalOption]);
+        }
+      } else {
+        // Otherwise, append it if it isn’t already selected.
+        if (!selectedPhases.some((selected) => selected.value === totalOption.value)) {
+          const updatedSelections = [...selectedPhases, totalOption];
+          setSelectedPhases(updatedSelections);
+          if (onPhaseChange) {
+            onPhaseChange(updatedSelections);
+          }
+        }
+      }
     }
   };
+  
+  
 
+  // Updated phase change handler to enforce single selection if limitToOne is true.
   const handlePhaseChange = (selected) => {
-    setSelectedPhases(selected);
-    onPhaseChange(selected);
+    let updatedSelection = selected;
+    if (limitToOne && selected.length > 1) {
+      // Keep only the most recently added selection.
+      updatedSelection = [selected[selected.length - 1]];
+    }
+    setSelectedPhases(updatedSelection);
+    if (onPhaseChange) {
+      onPhaseChange(updatedSelection);
+    }
   };
 
   // When the Grid header is clicked, reset the selection to only default (Total Power).
@@ -136,13 +169,12 @@ const PowerDropdown = ({ onPhaseChange }) => {
       <div className="p-2 w-full" style={{ maxHeight: "500px", overflowY: "auto" }}>
         <div className="flex flex-wrap w-full">
           {groupedPhaseOptions.map((group, groupIdx) => (
-            <div
-              key={groupIdx}
-              className="flex flex-col items-center w-full sm:w-1/3 p-2"
-            >
+            <div key={groupIdx} className="flex flex-col items-center w-full sm:w-1/3 p-2">
               <div
                 className={`text-lg font-semibold text-gray-800 flex items-left w-full px-5 ${
-                  group.clickable ? "cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded" : ""
+                  group.clickable
+                    ? "cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded"
+                    : ""
                 }`}
                 onClick={group.clickable ? handleGridClick : undefined}
               >
@@ -160,7 +192,7 @@ const PowerDropdown = ({ onPhaseChange }) => {
                       >
                         {subGroup.label}
                       </span>
-                      {/* Chevron: clicking this toggles the dropdown view */}
+                      {/* Chevron: clicking toggles the dropdown view */}
                       <span
                         className="cursor-pointer hover:bg-gray-100 rounded p-2"
                         onClick={() => toggleSubGroup(subGroup.label)}

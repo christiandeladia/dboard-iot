@@ -97,24 +97,43 @@ const MainChart = ({ selectedPlant }) => {
           hour12: true,
         }),
         timestamp_unix: entry.timestamp,
+          // Voltage measurements
         L1_voltage: entry.voltages_avg?.L1 || null,
         L2_voltage: entry.voltages_avg?.L2 || null,
         L3_voltage: entry.voltages_avg?.L3 || null,
+        total_voltage: entry.voltages_avg?.total || null,
+
+        // Current measurements
         L1_current: entry.currents_avg?.L1 || null,
         L2_current: entry.currents_avg?.L2 || null,
         L3_current: entry.currents_avg?.L3 || null,
+        total_current: entry.currents_avg?.total || null,
+
+        // Frequency measurements
         L1_frequency: entry.frequencies_avg?.L1 || null,
         L2_frequency: entry.frequencies_avg?.L2 || null,
         L3_frequency: entry.frequencies_avg?.L3 || null,
+        total_frequency: entry.frequencies_avg?.total || null,
+
+        // Voltage Harmonics measurements
         L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
         L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
         L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
+        total_volt_harmonic: entry.voltage_harmonics_avg?.total || null,
+
+        // Current Harmonics measurements
         L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
         L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
         L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
+        total_curr_harmonic: entry.current_harmonics_avg?.total || null,
+
+        // Power Factor measurements
         L1_power_factor: entry.power_factors_avg?.L1 || null,
         L2_power_factor: entry.power_factors_avg?.L2 || null,
         L3_power_factor: entry.power_factors_avg?.L3 || null,
+        total_power_factor: entry.power_factors_avg?.total || null,
+
+        // Power measurements
         L1_power: entry.power?.L1 || null,
         L2_power: entry.power?.L2 || null,
         L3_power: entry.power?.L3 || null,
@@ -159,24 +178,43 @@ const MainChart = ({ selectedPlant }) => {
             hour12: true,
           }),
           timestamp_unix: entry.timestamp,
+          // Voltage measurements
           L1_voltage: entry.voltages_avg?.L1 || null,
           L2_voltage: entry.voltages_avg?.L2 || null,
           L3_voltage: entry.voltages_avg?.L3 || null,
+          total_voltage: entry.voltages_avg?.total || null,
+
+          // Current measurements
           L1_current: entry.currents_avg?.L1 || null,
           L2_current: entry.currents_avg?.L2 || null,
           L3_current: entry.currents_avg?.L3 || null,
+          total_current: entry.currents_avg?.total || null,
+
+          // Frequency measurements
           L1_frequency: entry.frequencies_avg?.L1 || null,
           L2_frequency: entry.frequencies_avg?.L2 || null,
           L3_frequency: entry.frequencies_avg?.L3 || null,
+          total_frequency: entry.frequencies_avg?.total || null,
+
+          // Voltage Harmonics measurements
           L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
           L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
           L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
+          total_volt_harmonic: entry.voltage_harmonics_avg?.total || null,
+
+          // Current Harmonics measurements
           L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
           L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
           L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
+          total_curr_harmonic: entry.current_harmonics_avg?.total || null,
+
+          // Power Factor measurements
           L1_power_factor: entry.power_factors_avg?.L1 || null,
           L2_power_factor: entry.power_factors_avg?.L2 || null,
           L3_power_factor: entry.power_factors_avg?.L3 || null,
+          total_power_factor: entry.power_factors_avg?.total || null,
+
+          // Power measurements
           L1_power: entry.power?.L1 || null,
           L2_power: entry.power?.L2 || null,
           L3_power: entry.power?.L3 || null,
@@ -296,15 +334,15 @@ const combinedData = useMemo(() => {
     if (!filteredChartData || filteredChartData.length === 0) return {};
     // List all fields you want to compute an average for.
     const fields = [
-      "L1_voltage", "L2_voltage", "L3_voltage",
-      "L1_current", "L2_current", "L3_current",
-      "L1_frequency", "L2_frequency", "L3_frequency",
-      "L1_volt_harmonic", "L2_volt_harmonic", "L3_volt_harmonic",
-      "L1_curr_harmonic", "L2_curr_harmonic", "L3_curr_harmonic",
-      "L1_power_factor", "L2_power_factor", "L3_power_factor",
-      "L1_power", "L2_power", "L3_power",
-      "total_power"
+      "L1_voltage", "L2_voltage", "L3_voltage", "total_voltage",
+      "L1_current", "L2_current", "L3_current", "total_current",
+      "L1_frequency", "L2_frequency", "L3_frequency", "total_frequency",
+      "L1_volt_harmonic", "L2_volt_harmonic", "L3_volt_harmonic", "total_volt_harmonic",
+      "L1_curr_harmonic", "L2_curr_harmonic", "L3_curr_harmonic", "total_curr_harmonic",
+      "L1_power_factor", "L2_power_factor", "L3_power_factor", "total_power_factor",
+      "L1_power", "L2_power", "L3_power", "total_power"
     ];
+    
   
     const averages = {};
     fields.forEach((field) => {
@@ -374,7 +412,9 @@ const combinedData = useMemo(() => {
   return (
     <div className="w-full max-w-11/12 bg-white p-6 rounded-lg shadow-lg h-[80vh] flex flex-col">
       <div className="flex justify-between items-center mb-4">
-        <PowerDropdown onPhaseChange={setSelectedPhases} />
+      <PowerDropdown onPhaseChange={setSelectedPhases} limitToOne={selectedDates && diffInDays >= 2 && diffInDays <= 7} />
+
+
         <div className="flex items-center space-x-4">
           {/* Use the updated DateDropdown that now includes the chart toggle button */}
           <DateDropdown
@@ -397,110 +437,20 @@ const combinedData = useMemo(() => {
             {diffInDays < 2 ? (
               // Always use AreaChart for ranges less than 2 days.
               <AreaChart data={filteredChartData}>
-              <defs>
-                  {/* Voltage gradients */}
-                  <linearGradient id="gradientL1_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 102, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 102, 255)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(51, 153, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(51, 153, 255)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(102, 204, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(102, 204, 255)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Current gradients */}
-                  <linearGradient id="gradientL1_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 153, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 153, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 204, 51)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 204, 51)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 255, 102)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 255, 102)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Frequency gradients */}
-                  <linearGradient id="gradientL1_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 153, 76)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 153, 76)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(51, 204, 102)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(51, 204, 102)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(102, 255, 153)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(102, 255, 153)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Voltage Harmonics gradients */}
-                  <linearGradient id="gradientL1_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 99, 71)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 99, 71)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Current Harmonics gradients */}
-                  <linearGradient id="gradientL1_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 206, 209)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 206, 209)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(72, 209, 204)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(72, 209, 204)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(32, 178, 170)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(32, 178, 170)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Power Factor gradients */}
-                  <linearGradient id="gradientL1_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(128, 128, 128)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(128, 128, 128)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(169, 169, 169)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(169, 169, 169)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(192, 192, 192)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(192, 192, 192)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Power gradients */}
-                  <linearGradient id="gradientL1_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 0, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 0, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.3} />
-                  </linearGradient>
-
-                  {/* Total Power gradient */}
-                  <linearGradient id="gradient_total_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 165, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 165, 0)" stopOpacity={0.3} />
-                  </linearGradient>
+                <defs>
+                  {selectedPhases.map((phase) => (
+                    <linearGradient
+                      key={`areaGradient_${phase.value}`}
+                      id={`areaGradient_${phase.value}`}
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="10%" stopColor={phase.color} stopOpacity={1} />
+                      <stop offset="90%" stopColor={phase.color} stopOpacity={0.3} />
+                    </linearGradient>
+                  ))}
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
                 <XAxis
@@ -518,350 +468,36 @@ const combinedData = useMemo(() => {
                   tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                {/* Voltage */}
-      {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
-        <Area
-          type="monotone"
-          dataKey="L1_voltage"
-          stroke="rgb(0, 102, 255)"
-          fill="url(#gradientL1_voltage)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
-        <Area
-          type="monotone"
-          dataKey="L2_voltage"
-          stroke="rgb(51, 153, 255)"
-          fill="url(#gradientL2_voltage)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
-        <Area
-          type="monotone"
-          dataKey="L3_voltage"
-          stroke="rgb(102, 204, 255)"
-          fill="url(#gradientL3_voltage)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Current */}
-      {selectedPhases.some((phase) => phase.value === "L1_current") && (
-        <Area
-          type="monotone"
-          dataKey="L1_current"
-          stroke="rgb(255, 153, 0)"
-          fill="url(#gradientL1_current)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_current") && (
-        <Area
-          type="monotone"
-          dataKey="L2_current"
-          stroke="rgb(255, 204, 51)"
-          fill="url(#gradientL2_current)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_current") && (
-        <Area
-          type="monotone"
-          dataKey="L3_current"
-          stroke="rgb(255, 255, 102)"
-          fill="url(#gradientL3_current)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Frequency */}
-      {selectedPhases.some((phase) => phase.value === "L1_frequency") && (
-        <Area
-          type="monotone"
-          dataKey="L1_frequency"
-          stroke="rgb(0, 153, 76)"
-          fill="url(#gradientL1_frequency)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_frequency") && (
-        <Area
-          type="monotone"
-          dataKey="L2_frequency"
-          stroke="rgb(51, 204, 102)"
-          fill="url(#gradientL2_frequency)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_frequency") && (
-        <Area
-          type="monotone"
-          dataKey="L3_frequency"
-          stroke="rgb(102, 255, 153)"
-          fill="url(#gradientL3_frequency)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Voltage Harmonics */}
-      {selectedPhases.some((phase) => phase.value === "L1_volt_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L1_volt_harmonic"
-          stroke="rgb(255, 99, 71)"
-          fill="url(#gradientL1_volt_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_volt_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L2_volt_harmonic"
-          stroke="rgb(255, 140, 0)"
-          fill="url(#gradientL2_volt_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_volt_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L3_volt_harmonic"
-          stroke="rgb(255, 69, 0)"
-          fill="url(#gradientL3_volt_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Current Harmonics */}
-      {selectedPhases.some((phase) => phase.value === "L1_curr_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L1_curr_harmonic"
-          stroke="rgb(0, 206, 209)"
-          fill="url(#gradientL1_curr_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_curr_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L2_curr_harmonic"
-          stroke="rgb(72, 209, 204)"
-          fill="url(#gradientL2_curr_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_curr_harmonic") && (
-        <Area
-          type="monotone"
-          dataKey="L3_curr_harmonic"
-          stroke="rgb(32, 178, 170)"
-          fill="url(#gradientL3_curr_harmonic)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Power Factor */}
-      {selectedPhases.some((phase) => phase.value === "L1_power_factor") && (
-        <Area
-          type="monotone"
-          dataKey="L1_power_factor"
-          stroke="rgb(128, 128, 128)"
-          fill="url(#gradientL1_power_factor)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_power_factor") && (
-        <Area
-          type="monotone"
-          dataKey="L2_power_factor"
-          stroke="rgb(169, 169, 169)"
-          fill="url(#gradientL2_power_factor)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_power_factor") && (
-        <Area
-          type="monotone"
-          dataKey="L3_power_factor"
-          stroke="rgb(192, 192, 192)"
-          fill="url(#gradientL3_power_factor)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Power */}
-      {selectedPhases.some((phase) => phase.value === "L1_power") && (
-        <Area
-          type="monotone"
-          dataKey="L1_power"
-          stroke="rgb(255, 0, 0)"
-          fill="url(#gradientL1_power)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L2_power") && (
-        <Area
-          type="monotone"
-          dataKey="L2_power"
-          stroke="rgb(255, 69, 0)"
-          fill="url(#gradientL2_power)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-      {selectedPhases.some((phase) => phase.value === "L3_power") && (
-        <Area
-          type="monotone"
-          dataKey="L3_power"
-          stroke="rgb(255, 140, 0)"
-          fill="url(#gradientL3_power)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
-
-      {/* Total Power */}
-      {selectedPhases.some((phase) => phase.value === "total_power") && (
-        <Area
-          type="monotone"
-          dataKey="total_power"
-          stroke="rgb(255, 165, 0)"
-          fill="url(#gradient_total_power)"
-          strokeWidth={2}
-          dot={{ r: 2 }}
-        />
-      )}
+                {selectedPhases.map((phase) => (
+                  <Area
+                    key={`area_${phase.value}`}
+                    type="monotone"
+                    dataKey={phase.value} 
+                    stroke={phase.color}
+                    fill={`url(#areaGradient_${phase.value})`}
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                  />
+                ))}
               </AreaChart>
             ) : diffInDays > 7 ? (
               // Always use BarChart for ranges greater than 7 days.
               <BarChart data={filteredChartData}>
               <defs>
-                  {/* Voltage gradients */}
-                  <linearGradient id="gradientL1_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 102, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 102, 255)" stopOpacity={0.5} />
+                {selectedPhases.map((phase) => (
+                  <linearGradient
+                    key={`barGradient_${phase.value}`}
+                    id={`barGradient_${phase.value}`}
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop offset="10%" stopColor={phase.color} stopOpacity={1} />
+                    <stop offset="90%" stopColor={phase.color} stopOpacity={0.5} />
                   </linearGradient>
-                  <linearGradient id="gradientL2_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(51, 153, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(51, 153, 255)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_voltage" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(102, 204, 255)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(102, 204, 255)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Current gradients */}
-                  <linearGradient id="gradientL1_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 153, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 153, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 204, 51)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 204, 51)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_current" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 255, 102)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 255, 102)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Frequency gradients */}
-                  <linearGradient id="gradientL1_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 153, 76)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 153, 76)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(51, 204, 102)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(51, 204, 102)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_frequency" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(102, 255, 153)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(102, 255, 153)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Voltage Harmonics gradients */}
-                  <linearGradient id="gradientL1_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 99, 71)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 99, 71)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Current Harmonics gradients */}
-                  <linearGradient id="gradientL1_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(0, 206, 209)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(0, 206, 209)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(72, 209, 204)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(72, 209, 204)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(32, 178, 170)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(32, 178, 170)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Power Factor gradients */}
-                  <linearGradient id="gradientL1_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(128, 128, 128)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(128, 128, 128)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(169, 169, 169)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(169, 169, 169)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_power_factor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(192, 192, 192)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(192, 192, 192)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Power gradients */}
-                  <linearGradient id="gradientL1_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 0, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 0, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL2_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-                  <linearGradient id="gradientL3_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-
-                  {/* Total Power gradient */}
-                  <linearGradient id="gradient_total_power" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="10%" stopColor="rgb(255, 165, 0)" stopOpacity={1} />
-                    <stop offset="90%" stopColor="rgb(255, 165, 0)" stopOpacity={0.5} />
-                  </linearGradient>
-                </defs>
+                ))}
+              </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
                 <XAxis
                   dataKey="timestamp"
@@ -878,197 +514,35 @@ const combinedData = useMemo(() => {
                   tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                {/* Voltage */}
-                {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
-                  <Bar dataKey="L1_voltage" fill="url(#gradientL1_voltage)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
-                  <Bar dataKey="L2_voltage" fill="url(#gradientL2_voltage)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
-                  <Bar dataKey="L3_voltage" fill="url(#gradientL3_voltage)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Current */}
-                {selectedPhases.some((phase) => phase.value === "L1_current") && (
-                  <Bar dataKey="L1_current" fill="url(#gradientL1_current)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_current") && (
-                  <Bar dataKey="L2_current" fill="url(#gradientL2_current)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_current") && (
-                  <Bar dataKey="L3_current" fill="url(#gradientL3_current)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Frequency */}
-                {selectedPhases.some((phase) => phase.value === "L1_frequency") && (
-                  <Bar dataKey="L1_frequency" fill="url(#gradientL1_frequency)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_frequency") && (
-                  <Bar dataKey="L2_frequency" fill="url(#gradientL2_frequency)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_frequency") && (
-                  <Bar dataKey="L3_frequency" fill="url(#gradientL3_frequency)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Voltage Harmonics */}
-                {selectedPhases.some((phase) => phase.value === "L1_volt_harmonic") && (
-                  <Bar dataKey="L1_volt_harmonic" fill="url(#gradientL1_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_volt_harmonic") && (
-                  <Bar dataKey="L2_volt_harmonic" fill="url(#gradientL2_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_volt_harmonic") && (
-                  <Bar dataKey="L3_volt_harmonic" fill="url(#gradientL3_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Current Harmonics */}
-                {selectedPhases.some((phase) => phase.value === "L1_curr_harmonic") && (
-                  <Bar dataKey="L1_curr_harmonic" fill="url(#gradientL1_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_curr_harmonic") && (
-                  <Bar dataKey="L2_curr_harmonic" fill="url(#gradientL2_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_curr_harmonic") && (
-                  <Bar dataKey="L3_curr_harmonic" fill="url(#gradientL3_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Power Factor */}
-                {selectedPhases.some((phase) => phase.value === "L1_power_factor") && (
-                  <Bar dataKey="L1_power_factor" fill="url(#gradientL1_power_factor)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_power_factor") && (
-                  <Bar dataKey="L2_power_factor" fill="url(#gradientL2_power_factor)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_power_factor") && (
-                  <Bar dataKey="L3_power_factor" fill="url(#gradientL3_power_factor)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Power */}
-                {selectedPhases.some((phase) => phase.value === "L1_power") && (
-                  <Bar dataKey="L1_power" fill="url(#gradientL1_power)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L2_power") && (
-                  <Bar dataKey="L2_power" fill="url(#gradientL2_power)" radius={[15, 15, 0, 0]}/>
-                )}
-                {selectedPhases.some((phase) => phase.value === "L3_power") && (
-                  <Bar dataKey="L3_power" fill="url(#gradientL3_power)" radius={[15, 15, 0, 0]}/>
-                )}
-
-                {/* Total Power */}
-                {selectedPhases.some((phase) => phase.value === "total_power") && (
-                  <Bar dataKey="total_power" fill="url(#gradient_total_power)" radius={[15, 15, 0, 0]}/>
-                )}
+                {selectedPhases.map((phase) => (
+                  <Bar
+                    key={`bar_${phase.value}`}
+                    dataKey={phase.value}
+                    fill={`url(#barGradient_${phase.value})`}
+                    radius={[15, 15, 0, 0]}
+                  />
+                ))}
               </BarChart>
             ) : (
               // For custom date ranges between 2 and 7 days, render chart based on chartType state.
               chartType === "bar" ? (
                 <BarChart data={filteredChartData}>
-                <defs>
-                    {/* Voltage gradients */}
-                    <linearGradient id="gradientL1_voltage" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(0, 102, 255)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(0, 102, 255)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_voltage" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(51, 153, 255)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(51, 153, 255)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_voltage" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(102, 204, 255)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(102, 204, 255)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Current gradients */}
-                    <linearGradient id="gradientL1_current" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 153, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 153, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_current" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 204, 51)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 204, 51)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_current" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 255, 102)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 255, 102)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Frequency gradients */}
-                    <linearGradient id="gradientL1_frequency" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(0, 153, 76)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(0, 153, 76)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_frequency" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(51, 204, 102)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(51, 204, 102)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_frequency" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(102, 255, 153)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(102, 255, 153)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Voltage Harmonics gradients */}
-                    <linearGradient id="gradientL1_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 99, 71)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 99, 71)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_volt_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Current Harmonics gradients */}
-                    <linearGradient id="gradientL1_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(0, 206, 209)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(0, 206, 209)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(72, 209, 204)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(72, 209, 204)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_curr_harmonic" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(32, 178, 170)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(32, 178, 170)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Power Factor gradients */}
-                    <linearGradient id="gradientL1_power_factor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(128, 128, 128)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(128, 128, 128)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_power_factor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(169, 169, 169)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(169, 169, 169)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_power_factor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(192, 192, 192)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(192, 192, 192)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Power gradients */}
-                    <linearGradient id="gradientL1_power" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 0, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 0, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL2_power" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 69, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 69, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-                    <linearGradient id="gradientL3_power" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 140, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 140, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-  
-                    {/* Total Power gradient */}
-                    <linearGradient id="gradient_total_power" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="10%" stopColor="rgb(255, 165, 0)" stopOpacity={1} />
-                      <stop offset="90%" stopColor="rgb(255, 165, 0)" stopOpacity={0.5} />
-                    </linearGradient>
-                  </defs>
+                    <defs>
+                      {selectedPhases.map((phase) => (
+                        <linearGradient
+                          key={`barGradient_${phase.value}`}
+                          id={`barGradient_${phase.value}`}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop offset="10%" stopColor={phase.color} stopOpacity={1} />
+                          <stop offset="90%" stopColor={phase.color} stopOpacity={0.5} />
+                        </linearGradient>
+                      ))}
+                    </defs>
+
                   <CartesianGrid strokeDasharray="3 3" stroke="black" strokeOpacity={0.2} />
                   <XAxis
                     dataKey="timestamp"
@@ -1085,87 +559,14 @@ const combinedData = useMemo(() => {
                     tick={{ style: { pointerEvents: "none", userSelect: "none" } }}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  {/* Voltage */}
-                  {selectedPhases.some((phase) => phase.value === "L1_voltage") && (
-                    <Bar dataKey="L1_voltage" fill="url(#gradientL1_voltage)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_voltage") && (
-                    <Bar dataKey="L2_voltage" fill="url(#gradientL2_voltage)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_voltage") && (
-                    <Bar dataKey="L3_voltage" fill="url(#gradientL3_voltage)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Current */}
-                  {selectedPhases.some((phase) => phase.value === "L1_current") && (
-                    <Bar dataKey="L1_current" fill="url(#gradientL1_current)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_current") && (
-                    <Bar dataKey="L2_current" fill="url(#gradientL2_current)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_current") && (
-                    <Bar dataKey="L3_current" fill="url(#gradientL3_current)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Frequency */}
-                  {selectedPhases.some((phase) => phase.value === "L1_frequency") && (
-                    <Bar dataKey="L1_frequency" fill="url(#gradientL1_frequency)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_frequency") && (
-                    <Bar dataKey="L2_frequency" fill="url(#gradientL2_frequency)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_frequency") && (
-                    <Bar dataKey="L3_frequency" fill="url(#gradientL3_frequency)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Voltage Harmonics */}
-                  {selectedPhases.some((phase) => phase.value === "L1_volt_harmonic") && (
-                    <Bar dataKey="L1_volt_harmonic" fill="url(#gradientL1_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_volt_harmonic") && (
-                    <Bar dataKey="L2_volt_harmonic" fill="url(#gradientL2_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_volt_harmonic") && (
-                    <Bar dataKey="L3_volt_harmonic" fill="url(#gradientL3_volt_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Current Harmonics */}
-                  {selectedPhases.some((phase) => phase.value === "L1_curr_harmonic") && (
-                    <Bar dataKey="L1_curr_harmonic" fill="url(#gradientL1_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_curr_harmonic") && (
-                    <Bar dataKey="L2_curr_harmonic" fill="url(#gradientL2_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_curr_harmonic") && (
-                    <Bar dataKey="L3_curr_harmonic" fill="url(#gradientL3_curr_harmonic)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Power Factor */}
-                  {selectedPhases.some((phase) => phase.value === "L1_power_factor") && (
-                    <Bar dataKey="L1_power_factor" fill="url(#gradientL1_power_factor)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_power_factor") && (
-                    <Bar dataKey="L2_power_factor" fill="url(#gradientL2_power_factor)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_power_factor") && (
-                    <Bar dataKey="L3_power_factor" fill="url(#gradientL3_power_factor)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Power */}
-                  {selectedPhases.some((phase) => phase.value === "L1_power") && (
-                    <Bar dataKey="L1_power" fill="url(#gradientL1_power)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L2_power") && (
-                    <Bar dataKey="L2_power" fill="url(#gradientL2_power)" radius={[15, 15, 0, 0]}/>
-                  )}
-                  {selectedPhases.some((phase) => phase.value === "L3_power") && (
-                    <Bar dataKey="L3_power" fill="url(#gradientL3_power)" radius={[15, 15, 0, 0]}/>
-                  )}
-  
-                  {/* Total Power */}
-                  {selectedPhases.some((phase) => phase.value === "total_power") && (
-                    <Bar dataKey="total_power" fill="url(#gradient_total_power)" radius={[15, 15, 0, 0]}/>
-                  )}
+                  {selectedPhases.map((phase) => (
+                    <Bar
+                      key={`bar_${phase.value}`}
+                      dataKey={phase.value}
+                      fill={`url(#barGradient_${phase.value})`}
+                      radius={[15, 15, 0, 0]}
+                    />
+                  ))}
                 </BarChart>
               ) : mergedData && (
               <AreaChart data={mergedData}>
