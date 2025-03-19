@@ -41,6 +41,7 @@ const MainChart = ({ selectedPlant }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredPhase, setHoveredPhase] = useState(null);
   const [hoveredPhaseValue, setHoveredPhaseValue] = useState(null);
+  const [hoveredPill, setHoveredPill] = useState(null);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -100,47 +101,68 @@ const MainChart = ({ selectedPlant }) => {
           hour12: true,
         }),
         timestamp_unix: entry.timestamp,
-          // Voltage measurements
+        // Voltage measurements
         L1_voltage: entry.voltages_avg?.L1 || null,
         L2_voltage: entry.voltages_avg?.L2 || null,
         L3_voltage: entry.voltages_avg?.L3 || null,
-        total_voltage: entry.voltages_avg?.total || null,
+        total_voltage:
+          (entry.voltages_avg?.L1 ?? 0) +
+          (entry.voltages_avg?.L2 ?? 0) +
+          (entry.voltages_avg?.L3 ?? 0),
 
         // Current measurements
         L1_current: entry.currents_avg?.L1 || null,
         L2_current: entry.currents_avg?.L2 || null,
         L3_current: entry.currents_avg?.L3 || null,
-        total_current: entry.currents_avg?.total || null,
+        total_current:
+          (entry.currents_avg?.L1 ?? 0) +
+          (entry.currents_avg?.L2 ?? 0) +
+          (entry.currents_avg?.L3 ?? 0),
 
         // Frequency measurements
         L1_frequency: entry.frequencies_avg?.L1 || null,
         L2_frequency: entry.frequencies_avg?.L2 || null,
         L3_frequency: entry.frequencies_avg?.L3 || null,
-        total_frequency: entry.frequencies_avg?.total || null,
+        total_frequency:
+          (entry.frequencies_avg?.L1 ?? 0) +
+          (entry.frequencies_avg?.L2 ?? 0) +
+          (entry.frequencies_avg?.L3 ?? 0),
 
         // Voltage Harmonics measurements
         L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
         L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
         L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
-        total_volt_harmonic: entry.voltage_harmonics_avg?.total || null,
+        total_volt_harmonic:
+          (entry.voltage_harmonics_avg?.L1 ?? 0) +
+          (entry.voltage_harmonics_avg?.L2 ?? 0) +
+          (entry.voltage_harmonics_avg?.L3 ?? 0),
 
         // Current Harmonics measurements
         L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
         L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
         L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
-        total_curr_harmonic: entry.current_harmonics_avg?.total || null,
+        total_curr_harmonic:
+          (entry.current_harmonics_avg?.L1 ?? 0) +
+          (entry.current_harmonics_avg?.L2 ?? 0) +
+          (entry.current_harmonics_avg?.L3 ?? 0),
 
         // Power Factor measurements
         L1_power_factor: entry.power_factors_avg?.L1 || null,
         L2_power_factor: entry.power_factors_avg?.L2 || null,
         L3_power_factor: entry.power_factors_avg?.L3 || null,
-        total_power_factor: entry.power_factors_avg?.total || null,
+        total_power_factor:
+          (entry.power_factors_avg?.L1 ?? 0) +
+          (entry.power_factors_avg?.L2 ?? 0) +
+          (entry.power_factors_avg?.L3 ?? 0),
 
         // Power measurements
         L1_power: entry.power?.L1 || null,
         L2_power: entry.power?.L2 || null,
         L3_power: entry.power?.L3 || null,
-        total_power: entry.power?.total || null,
+        total_power:
+          (entry.power?.L1 ?? 0) +
+          (entry.power?.L2 ?? 0) +
+          (entry.power?.L3 ?? 0),
       }));
   }, [data, selectedDates]);
 
@@ -185,43 +207,64 @@ const MainChart = ({ selectedPlant }) => {
           L1_voltage: entry.voltages_avg?.L1 || null,
           L2_voltage: entry.voltages_avg?.L2 || null,
           L3_voltage: entry.voltages_avg?.L3 || null,
-          total_voltage: entry.voltages_avg?.total || null,
+          total_voltage:
+            (entry.voltages_avg?.L1 ?? 0) +
+            (entry.voltages_avg?.L2 ?? 0) +
+            (entry.voltages_avg?.L3 ?? 0),
 
           // Current measurements
           L1_current: entry.currents_avg?.L1 || null,
           L2_current: entry.currents_avg?.L2 || null,
           L3_current: entry.currents_avg?.L3 || null,
-          total_current: entry.currents_avg?.total || null,
+          total_current:
+            (entry.currents_avg?.L1 ?? 0) +
+            (entry.currents_avg?.L2 ?? 0) +
+            (entry.currents_avg?.L3 ?? 0),
 
           // Frequency measurements
           L1_frequency: entry.frequencies_avg?.L1 || null,
           L2_frequency: entry.frequencies_avg?.L2 || null,
           L3_frequency: entry.frequencies_avg?.L3 || null,
-          total_frequency: entry.frequencies_avg?.total || null,
+          total_frequency:
+            (entry.frequencies_avg?.L1 ?? 0) +
+            (entry.frequencies_avg?.L2 ?? 0) +
+            (entry.frequencies_avg?.L3 ?? 0),
 
           // Voltage Harmonics measurements
           L1_volt_harmonic: entry.voltage_harmonics_avg?.L1 || null,
           L2_volt_harmonic: entry.voltage_harmonics_avg?.L2 || null,
           L3_volt_harmonic: entry.voltage_harmonics_avg?.L3 || null,
-          total_volt_harmonic: entry.voltage_harmonics_avg?.total || null,
+          total_volt_harmonic:
+            (entry.voltage_harmonics_avg?.L1 ?? 0) +
+            (entry.voltage_harmonics_avg?.L2 ?? 0) +
+            (entry.voltage_harmonics_avg?.L3 ?? 0),
 
           // Current Harmonics measurements
           L1_curr_harmonic: entry.current_harmonics_avg?.L1 || null,
           L2_curr_harmonic: entry.current_harmonics_avg?.L2 || null,
           L3_curr_harmonic: entry.current_harmonics_avg?.L3 || null,
-          total_curr_harmonic: entry.current_harmonics_avg?.total || null,
+          total_curr_harmonic:
+            (entry.current_harmonics_avg?.L1 ?? 0) +
+            (entry.current_harmonics_avg?.L2 ?? 0) +
+            (entry.current_harmonics_avg?.L3 ?? 0),
 
           // Power Factor measurements
           L1_power_factor: entry.power_factors_avg?.L1 || null,
           L2_power_factor: entry.power_factors_avg?.L2 || null,
           L3_power_factor: entry.power_factors_avg?.L3 || null,
-          total_power_factor: entry.power_factors_avg?.total || null,
+          total_power_factor:
+            (entry.power_factors_avg?.L1 ?? 0) +
+            (entry.power_factors_avg?.L2 ?? 0) +
+            (entry.power_factors_avg?.L3 ?? 0),
 
           // Power measurements
           L1_power: entry.power?.L1 || null,
           L2_power: entry.power?.L2 || null,
           L3_power: entry.power?.L3 || null,
-          total_power: entry.power?.total || null,
+          total_power:
+            (entry.power?.L1 ?? 0) +
+            (entry.power?.L2 ?? 0) +
+            (entry.power?.L3 ?? 0),
         }));
     } else {
       // For ranges of 2 days or more, group data by day (or month if spanning multiple months)
@@ -254,7 +297,9 @@ const MainChart = ({ selectedPlant }) => {
     if (selectedDates && diffInDays >= 2 && diffInDays <= 7 && chartType === "area") {
       const groups = {};
       rawFilteredData.forEach((entry) => {
-        const dayKey = new Date(entry.timestamp_unix * 1000).toDateString();
+        // Use the same short format as in the pills.
+        const dayKey = new Date(entry.timestamp_unix * 1000)
+          .toLocaleDateString(undefined, { month: "short", day: "numeric" });
         if (!groups[dayKey]) groups[dayKey] = [];
         const originalDate = new Date(entry.timestamp_unix * 1000);
         const fixedTime = new Date(
@@ -428,6 +473,8 @@ const combinedData = useMemo(() => {
             onDateSelect={(dates) => setSelectedDates(dates)}
             onChartTypeChange={(newType) => setChartType(newType)}
             overallAverages={overallAverages}
+            onDatePillHover={setHoveredPill} // Pass the callback here.
+            rawData={rawFilteredData} 
           />
         </div>
       </div>
@@ -496,6 +543,7 @@ const combinedData = useMemo(() => {
                       fill="black"
                       fontSize={12}
                       textAnchor="middle"
+                      formatter={(value) => Number(value).toFixed(2)}
                     />
                   )}
                 </Area>
@@ -553,6 +601,7 @@ const combinedData = useMemo(() => {
                         fill="black"
                         fontSize="12"
                         textAnchor="middle"
+                        formatter={(value) => Number(value).toFixed(2)}
                       />
                     )}
                   </Bar>
@@ -629,6 +678,8 @@ const combinedData = useMemo(() => {
                 {selectedPhases.map((phase) =>
                   overlayData.map((group) => {
                     const dataKey = `${group.day}||${phase.value}`;
+                    // Compare the hovered pill value with the group's day (both should be formatted similarly, e.g. "Mar 1")
+                    const isHovered = hoveredPill === group.day;
                     return (
                       <Area
                         key={`${group.day}||${phase.value}`}
@@ -636,12 +687,30 @@ const combinedData = useMemo(() => {
                         dataKey={dataKey}
                         stroke={phase.color}
                         fillOpacity={0}
-                        strokeOpacity={0.8}
+                        // Highlight with thicker stroke if hovered; otherwise, use normal thickness.
+                        strokeWidth={isHovered ? 4 : 2}
+                        // Adjust opacity: fully opaque for the hovered series and slightly faded for non-hovered.
+                        style={{
+                          filter: hoveredPill && !isHovered ? "grayscale(100%)" : "none",
+                          opacity: hoveredPill && !isHovered ? 0.3 : 1,
+                        }}                        
                         dot={{ r: 2 }}
-                      />
+                      >
+                        {isHovered && (
+                          <LabelList
+                            dataKey={dataKey}
+                            position="top"
+                            fill="black"
+                            fontSize={12}
+                            textAnchor="middle"
+                            formatter={(value) => Number(value).toFixed(2)}
+                          />
+                        )}
+                      </Area>
                     );
                   })
                 )}
+
                 {/* Render average series for each selected phase with gradient fill */}
                 {selectedPhases.map((phase) => (
                   <Area

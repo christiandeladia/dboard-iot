@@ -72,13 +72,12 @@ const CustomTooltip = ({ active, payload }) => {
         const indicatorColor = option ? option.color : "black";
 
         // Determine unit based on displayLabel.
-        let unit = "V"; // Default
+        let unit = " ";
         const lowerLabel = displayLabel.toString().toLowerCase();
         if (lowerLabel.includes("current")) unit = "A";
         if (lowerLabel.includes("frequency")) unit = "Hz";
-        if (lowerLabel.includes("power factor")) unit = "PF";
-        if (lowerLabel.includes("harmonic")) unit = "%";
-        // Ensure that 'power factor' check comes before power.
+        if (lowerLabel.includes("voltage")) unit = "V";
+        if (lowerLabel.includes("harmonic")) unit = "Hz";
         if (lowerLabel.includes("power") && !lowerLabel.includes("power factor")) unit = "kW";
 
         return (
@@ -98,10 +97,10 @@ const CustomTooltip = ({ active, payload }) => {
                 }}
               ></span>
               <span className="font-semibold text-sm">
-                {displayLabel} ({unit})
+                {displayLabel} {unit}
               </span>
             </span>
-            <span className="font-bold">{item.value}</span>
+            <span className="font-bold">{item.value.toFixed(2)}</span>
           </p>
         );
       })}

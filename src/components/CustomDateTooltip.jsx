@@ -92,14 +92,13 @@ const CustomDateTooltip = ({ active, payload }) => {
           : baseKey.replace(/_/g, " ");
           
         // Determine unit based on displayLabel.
-        let unit = "V"; // default
-        const lowerLabel = displayLabel.toLowerCase();
+        let unit = " "; // Default unit for voltage.
+        const lowerLabel = displayLabel.toString().toLowerCase();
         if (lowerLabel.includes("current")) unit = "A";
         if (lowerLabel.includes("frequency")) unit = "Hz";
-        if (lowerLabel.includes("power factor")) unit = "PF";
-        if (lowerLabel.includes("harmonic")) unit = "%";
-        if (lowerLabel.includes("power") && !lowerLabel.includes("power factor"))
-          unit = "kW";
+        if (lowerLabel.includes("voltage")) unit = "V";
+        if (lowerLabel.includes("harmonic")) unit = "Hz";
+        if (lowerLabel.includes("power") && !lowerLabel.includes("power factor")) unit = "kW";
 
         // Use the option's color if available.
         const indicatorColor = option ? option.color : "black";
@@ -119,7 +118,7 @@ const CustomDateTooltip = ({ active, payload }) => {
               ></span>
               <span className="font-semibold text-sm">
                 {dayLabel && <span>{dayLabel} - </span>}
-                {displayLabel} ({unit})
+                {displayLabel} {unit}
               </span>
             </span>
             <span className="font-bold">{item.value.toFixed(2)}</span>

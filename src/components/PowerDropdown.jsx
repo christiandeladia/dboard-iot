@@ -20,6 +20,15 @@ export const groupedPhaseOptions = [
     ),
     options: [
       {
+        label: "Power",
+        options: [
+          { value: "L1_power", label: "L1 Power", color: "rgb(128, 0, 128)" },
+          { value: "L2_power", label: "L2 Power", color: "rgb(75, 0, 130)" },
+          { value: "L3_power", label: "L3 Power", color: "rgb(138, 43, 226)" },
+          { value: "total_power", label: "Total Power", color: "rgb(147, 112, 219)" }
+        ],
+      },
+      {
         label: "Voltage",
         options: [
           { value: "L1_voltage", label: "L1 Voltage", color: "rgb(0, 102, 255)" },
@@ -73,15 +82,7 @@ export const groupedPhaseOptions = [
           { value: "total_power_factor", label: "Total Power Factor", color: "rgb(184,134,11)" }, // Dark Goldenrod
         ],
       },
-      {
-        label: "Power",
-        options: [
-          { value: "L1_power", label: "L1 Power", color: "rgb(128, 0, 128)" },
-          { value: "L2_power", label: "L2 Power", color: "rgb(75, 0, 130)" },
-          { value: "L3_power", label: "L3 Power", color: "rgb(138, 43, 226)" },
-          { value: "total_power", label: "Total Power", color: "rgb(147, 112, 219)" }
-        ],
-      },
+
     ],
   },
   {
