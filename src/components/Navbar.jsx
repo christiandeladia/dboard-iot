@@ -1,4 +1,5 @@
 import { FiLogOut } from "react-icons/fi";
+import { FaUser } from "react-icons/fa";
 import logo from "../assets/img/logo/logo.png";
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
@@ -76,15 +77,15 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
   };
 
   return (
-    <nav className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+    <nav className="bg-white shadow-md py-2 px-10 flex justify-between items-center">
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <img className="mb-2" src={logo} alt="Blueshift" width="40" height="40" />
-        <h1 className="text-2xl font-semibold text-gray-900">Blueshift</h1>
+        <img className="mb-2" src={logo} alt="Blueshift" width="30" height="30" />
+        <h1 className="text-xl font-semibold text-gray-900">Blueshift</h1>
       </div>
 
       {/* Right Section: Plant Selector + Logout Button */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2.5">
         {user && (
           <div className="flex items-center bg-white">
             {(!userData || isPlantsLoading) ? (
@@ -103,14 +104,19 @@ const Navbar = ({ user, userData, onLogout, setSelectedPlant }) => {
             )}
           </div>
         )}
+        {/* Profile Button */}
+        <button
+          className="text-gray-500 bg-white px-2.5 py-2.5 rounded-lg flex items-center font-semibold hover:bg-gray-500 hover:text-white transition-all shadow-md border border-gray-300"
+        >
+          <FaUser />
+        </button>
 
         {/* Logout Button */}
         <button
           onClick={onLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 font-semibold hover:bg-red-600 transition-all shadow-md"
+          className="bg-gray-500 text-white px-2.5 py-2.5 rounded-lg flex items-center font-semibold hover:bg-gray-600 transition-all shadow-md"
         >
-          <FiLogOut className="h-5 w-5" />
-          Logout
+          <FiLogOut />
         </button>
       </div>
     </nav>

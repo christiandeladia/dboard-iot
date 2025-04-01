@@ -9,6 +9,16 @@ export const groupedPhaseOptions = [
         <span>Solar</span>
       </div>
     ),
+    customContent: (
+      <div className="p-5 border rounded-lg flex flex-col justify-between h-full max-h-[240px]">
+        <p className="mb-2 text-md text-gray-600">
+          Simulate your solar production to get the best size
+        </p>
+        <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md cursor-pointer">
+          Add Solar
+        </button>
+      </div>
+    ),
     options: [],
   },
   {
@@ -29,21 +39,21 @@ export const groupedPhaseOptions = [
         ],
       },
       {
-        label: "Voltage",
-        options: [
-          { value: "L1_voltage", label: "L1 Voltage", color: "rgb(0, 102, 255)" },
-          { value: "L2_voltage", label: "L2 Voltage", color: "rgb(51, 153, 255)" },
-          { value: "L3_voltage", label: "L3 Voltage", color: "rgb(102, 204, 255)" },
-          { value: "total_voltage", label: "Total Voltage", color: "rgb(0, 0, 255)" }
-        ],
-      },
-      {
         label: "Current",
         options: [
           { value: "L1_current", label: "L1 Current", color: "rgb(255, 153, 0)" },
           { value: "L2_current", label: "L2 Current", color: "rgb(255, 204, 51)" },
           { value: "L3_current", label: "L3 Current", color: "rgb(255, 255, 102)" },
           { value: "total_current", label: "Total Current", color: "rgb(255, 128, 0)" }
+        ],
+      },
+      {
+        label: "Voltage",
+        options: [
+          { value: "L1_voltage", label: "L1 Voltage", color: "rgb(0, 102, 255)" },
+          { value: "L2_voltage", label: "L2 Voltage", color: "rgb(51, 153, 255)" },
+          { value: "L3_voltage", label: "L3 Voltage", color: "rgb(102, 204, 255)" },
+          { value: "total_voltage", label: "Total Voltage", color: "rgb(0, 0, 255)" }
         ],
       },
       {
@@ -89,6 +99,16 @@ export const groupedPhaseOptions = [
     label: (
       <div className="flex items-center">
         <span>Battery</span>
+      </div>
+    ),
+    customContent: (
+      <div className="p-5 border rounded-lg flex flex-col justify-between h-full max-h-[240px]">
+        <p className="mb-2 text-md text-gray-600">
+          Store power for night
+        </p>
+        <button className="px-4 py-2 bg-blue-500 text-white text-sm rounded-md cursor-pointer">
+          Add Battery
+        </button>
       </div>
     ),
     options: [],
@@ -188,60 +208,62 @@ const PowerDropdown = ({ onPhaseChange, onPhaseHover, limitToOne = false }) => {
               >
                 {group.label}
               </div>
-              {/* Vertical column for subgroups */}
-              <div className="flex flex-col mt-1 space-y-1 w-full px-5">
-                {group.options.map((subGroup) => (
-                  <div key={subGroup.label} className="flex flex-col items-center w-full">
-                    <div className="flex items-center text-md w-full justify-between">
-                      {/* Label text: clicking this will select all subgroup options */}
-                      <span
-                        className="cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded w-full p-1"
-                        onClick={() => handleSelectSubGroup(subGroup.options)}
-                      >
-                        {subGroup.label}
-                      </span>
-                      {/* Chevron: clicking toggles the dropdown view */}
-                      <span
-                        className="cursor-pointer hover:bg-gray-100 rounded p-2"
-                        onClick={() => toggleSubGroup(subGroup.label)}
-                      >
-                        {expandedSubGroups[subGroup.label] ? (
-                          <FaChevronDown />
-                        ) : (
-                          <FaChevronRight />
-                        )}
-                      </span>
-                    </div>
-                    {expandedSubGroups[subGroup.label] && (
-                      <div className="flex flex-col mt-1 w-full">
-                        {subGroup.options
-                          .filter(
-                            (option) =>
-                              !selectedPhases.some(
-                                (selected) => selected.value === option.value
-                              )
-                          )
-                          .map((option) => (
-                            <div
-                              key={option.value}
-                              className="cursor-pointer text-sm p-1 ps-3 hover:bg-gray-200 rounded w-full"
-                              onClick={() =>
-                                handlePhaseChange([...selectedPhases, option])
-                              }
-                            >
-                              <div className="flex items-center">
-                                <span
-                                  className="w-3 h-3 rounded-full mr-2"
-                                  style={{ backgroundColor: option.color }}
-                                ></span>
-                                {option.label}
-                              </div>
-                            </div>
-                          ))}
+              <div className="flex flex-col mt-1 space-y-1 w-full h-full px-5">
+                {/* If customContent exists, render it */}
+                {group.customContent ? (
+                  group.customContent
+                ) : (
+                  group.options.map((subGroup) => (
+                    <div key={subGroup.label} className="flex flex-col items-center w-full">
+                      <div className="flex items-center text-md w-full justify-between">
+                        <span
+                          className="cursor-pointer hover:text-blue-600 hover:bg-gray-100 rounded w-full p-1"
+                          onClick={() => handleSelectSubGroup(subGroup.options)}
+                        >
+                          {subGroup.label}
+                        </span>
+                        <span
+                          className="cursor-pointer hover:bg-gray-100 rounded p-2"
+                          onClick={() => toggleSubGroup(subGroup.label)}
+                        >
+                          {expandedSubGroups[subGroup.label] ? (
+                            <FaChevronDown />
+                          ) : (
+                            <FaChevronRight />
+                          )}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {expandedSubGroups[subGroup.label] && (
+                        <div className="flex flex-col mt-1 w-full">
+                          {subGroup.options
+                            .filter(
+                              (option) =>
+                                !selectedPhases.some(
+                                  (selected) => selected.value === option.value
+                                )
+                            )
+                            .map((option) => (
+                              <div
+                                key={option.value}
+                                className="cursor-pointer text-sm p-1 ps-3 hover:bg-gray-200 rounded w-full"
+                                onClick={() =>
+                                  handlePhaseChange([...selectedPhases, option])
+                                }
+                              >
+                                <div className="flex items-center">
+                                  <span
+                                    className="w-3 h-3 rounded-full mr-2"
+                                    style={{ backgroundColor: option.color }}
+                                  ></span>
+                                  {option.label}
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           ))}
@@ -249,6 +271,7 @@ const PowerDropdown = ({ onPhaseChange, onPhaseHover, limitToOne = false }) => {
       </div>
     );
   };
+  
 
   const customStyles = {
     control: (provided) => ({
@@ -286,7 +309,7 @@ const PowerDropdown = ({ onPhaseChange, onPhaseHover, limitToOne = false }) => {
   };
 
   return (
-    <div className="flex items-center space-x-4 w-200">
+    <div className="flex items-center space-x-4 w-200 mr-2">
       <Select
         isMulti
         isSearchable={false}
