@@ -8,6 +8,9 @@ const SolarProposal = ({ updateData  }) => {  // Accepting the prop here
 
     return (
         <div className="w-full max-w-10/12">
+                        <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
+                Solar Design Studio
+            </h2>
             <h2 className="text-4xl font-medium mb-8">Get a personalized solar proposal instantly</h2>
             
             <div className="w-full h-70 bg-gray-300 mb-8 rounded-lg border-2 flex justify-center items-center">

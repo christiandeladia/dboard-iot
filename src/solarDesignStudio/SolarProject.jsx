@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import groundRoof from "./assets/img/stock/ground-roof.jpeg";
 import canopyRoof from "./assets/img/stock/canopy-roof.png";
@@ -47,6 +47,16 @@ const SolarProject = ({ updateData, selectedInstallation }) => {
   const [isRoofModalOpen, setRoofModalOpen] = useState(false);
   const [selectedRoofType, setSelectedRoofType] = useState("Roof");
 
+  // When component mounts, set selectedRoofType from formData
+  useEffect(() => {
+    if (
+      selectedInstallation &&
+      !["Ground", "Canopy"].includes(selectedInstallation)
+    ) {
+      setSelectedRoofType(selectedInstallation); // set to "Metal", "Tiles", etc.
+    }
+  }, [selectedInstallation]);
+
   const handleInstallationClick = (option) => {
     if (option === "Roof") {
       // Open modal for roof type selection
@@ -90,6 +100,9 @@ const SolarProject = ({ updateData, selectedInstallation }) => {
 
   return (
     <div className="w-full max-w-10/12">
+                  <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
+                Solar Design Studio
+            </h2>
       <h2 className="text-4xl font-medium mb-8">Tell us about your project.</h2>
 
       {/* Image container with a changeable image */}
