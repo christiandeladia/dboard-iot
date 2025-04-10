@@ -2,21 +2,25 @@ import React, { useEffect, useState, useRef } from 'react';
 import GoogleMapReact from 'google-map-react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../Config';
+import { RiMapPinFill } from "react-icons/ri";
 
 const Marker = ({ markerType }) => {
   const markerClass =
     markerType === 'battery'
-      ? 'bg-green-600'
+      ? 'bg-green-600 text-green-600'
       : markerType === 'solar'
-      ? 'bg-blue-600'
-      : 'bg-gray-500';
+      ? 'bg-blue-600 text-blue-600'
+      : 'bg-gray-500 text-gray-500';
   return (
     <div
-      className={`w-4 h-4 rounded-full ${markerClass}`}
+      className={`w-4 h-4 rounded-full ${markerClass} shadow-[0_0_20px_5px_currentColor]`}
       style={{ border: '2px solid white' }}
     ></div>
   );
 };
+
+
+
 
 const MapComponent = ({ updateData, selectedAddress  }) => {
   const inputRef = useRef(null);
@@ -146,8 +150,8 @@ const MapComponent = ({ updateData, selectedAddress  }) => {
 
   const drawMetroManilaCircle = (map, maps) => {
     const circle = new maps.Circle({
-      center: { lat: 14.5995, lng: 120.9842 }, // approximate center of Metro Manila
-      radius: 25000, // in meters, approx. 18km radius
+      center: { lat: 14.5995, lng: 120.9842 },
+      radius: 25000,
       strokeColor: '#FFF085',
       strokeOpacity: 0.8,
       strokeWeight: 2,
@@ -182,55 +186,65 @@ const MapComponent = ({ updateData, selectedAddress  }) => {
       <h2 className="text-4xl font-medium mb-8">Tell us more about your project.</h2>
 
       <div className='p-2 rounded-2xl border border-gray-300 shadow-lg bg-white' style={{ height: '300px', width: '100%' }}>
-        <GoogleMapReact
-          bootstrapURLKeys={{
-            key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-            libraries: ['places']
-          }}
-          center={selectedLocation || defaultProps.center}
-          zoom={selectedLocation ? 17 : defaultProps.zoom}
-          options={{
-            mapTypeId: 'hybrid' // 👈 this sets the satellite view
-          }}
-          yesIWantToUseGoogleMapApiInternals
-          onGoogleApiLoaded={({ map, maps }) => drawMetroManilaCircle(map, maps)}
-          onChange={({ center }) => {
-            if (!showDefaultMap) {
-              setSelectedLocation(center);
-          
-              // Skip reverse geocode if this was triggered from user input
-              if (wasFromInput.current) {
-                wasFromInput.current = false; // reset it for next drag
-                return;
-              }
-          
-              if (debounceTimer.current) {
-                clearTimeout(debounceTimer.current);
-              }
-          
-              debounceTimer.current = setTimeout(() => {
-                reverseGeocodeLatLng(center.lat, center.lng);
-              }, 700);
-            }
-          }}          
-          
-          
-        >
-          {showDefaultMap &&
-            pins.map((pin) => (
-              <Marker
-                key={pin.id}
-                lat={pin.latitude}
-                lng={pin.longitude}
-                markerType={pin.type}
-              />
-            ))}
-          {/* We won't put the fixed marker inside GoogleMapReact */}
-        </GoogleMapReact>
+      <GoogleMapReact
+  bootstrapURLKeys={{
+    key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    libraries: ['places']
+  }}
+  center={selectedLocation || defaultProps.center}
+  zoom={selectedLocation ? 19 : defaultProps.zoom}
+  options={{
+    mapTypeId: showDefaultMap ? 'roadmap' : 'satellite',
+    ...(showDefaultMap && {
+      styles: [
+        {
+          stylers: [
+            { saturation: -100 },
+            { gamma: 0.4 }
+          ]
+        }
+      ]
+    })
+  }}
+  yesIWantToUseGoogleMapApiInternals
+  onGoogleApiLoaded={({ map, maps }) => {
+    // drawMetroManilaCircle(map, maps); // not used for now
+  }}
+  onChange={({ center }) => {
+    if (!showDefaultMap) {
+      setSelectedLocation(center);
+
+      if (wasFromInput.current) {
+        wasFromInput.current = false;
+        return;
+      }
+
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+
+      debounceTimer.current = setTimeout(() => {
+        reverseGeocodeLatLng(center.lat, center.lng);
+      }, 700);
+    }
+  }}
+>
+  {showDefaultMap &&
+    pins.map((pin) => (
+      <Marker
+        key={pin.id}
+        lat={pin.latitude}
+        lng={pin.longitude}
+        markerType={pin.type}
+      />
+    ))}
+</GoogleMapReact>
+
 
         {!showDefaultMap && (
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-10">
-            <div className="w-5 h-5 bg-red-500 border-2 border-white rounded-full shadow-md"></div>
+            {/* <div className="w-5 h-5 bg-red-500 border-2 border-white rounded-full shadow-md"></div> */}
+            <RiMapPinFill  className='w-8 h-8 text-red-500' />
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { AiOutlineClose } from "react-icons/ai";
 import groundRoof from "./assets/img/stock/ground-roof.jpeg";
 import canopyRoof from "./assets/img/stock/canopy-roof.png";
 import metalRoof from "./assets/img/stock/metal-roof.webp";
@@ -15,16 +15,25 @@ const RoofModal = ({ isOpen, onClose, onSelectRoofType, selectedRoofType }) => {
   const roofTypes = ["Metal", "Shingles", "Tiles", "Flatroof"];
 
   return (
-    <div className="fixed inset-0 bg-gray-500/50  flex justify-center items-center z-50" >
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h3 className="text-xl font-bold mb-4">Select Roof Type</h3>
-        <div className="flex flex-wrap gap-2">
+    <div className="fixed inset-0 bg-black/40 flex items-end justify-center z-50">
+      <div className="bg-white w-full rounded-t-2xl p-6 h-50 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
+        <div className="mb-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold">Select Roof Type</h3>
+          <button onClick={onClose}>
+            <AiOutlineClose className="text-black text-2xl" />
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-3 mt-15 justify-center w-full">
           {roofTypes.map((type) => (
             <button
               key={type}
-              className={`border border-gray-500 px-3 py-1 rounded-md transition-all hover:bg-blue-500 hover:text-white ${
-                selectedRoofType === type ? "bg-blue-500 text-white" : "bg-gray-100"
-              }`}
+              className={`border flex-1 border-gray-400 px-4 py-2 rounded-md transition-all text-sm font-medium
+                ${
+                  selectedRoofType === type
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 hover:bg-blue-100"
+                }`}
               onClick={() => {
                 onSelectRoofType(type);
                 onClose();
@@ -34,13 +43,15 @@ const RoofModal = ({ isOpen, onClose, onSelectRoofType, selectedRoofType }) => {
             </button>
           ))}
         </div>
-        <div className="mt-4 text-right">
-          <button className="text-blue-500" onClick={onClose}>Cancel</button>
-        </div>
+
+        {/* <div className="mt-6 text-right">
+          <button className="text-blue-600 text-sm" onClick={onClose}>Cancel</button>
+        </div> */}
       </div>
     </div>
   );
 };
+
 
 const SolarProject = ({ updateData, selectedInstallation }) => {
   // Local state for modal visibility and selected roof type

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from "react-icons/fa6";
 import DailyEnergyChart from "./chart/DailyEnergyChart";
 import { AiOutlineClose } from "react-icons/ai";
+import DraggableAreaChart from './chart/DraggableAreaChart';
 
 const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage }) => {
   const [selectedUsage, setSelectedUsage] = useState(propUsage || "Day time");
@@ -66,8 +67,8 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage }) => {
             {/* Modal */}
             {showModal && (
               <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
-                <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
-                <div className="mb-6 flex justify-between">
+                <div className="bg-white w-full rounded-t-2xl max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
+                <div className="mb-6 flex justify-between  p-6 pb-0">
                   <h3 className="text-lg font-bold">Adjust Daily Energy Pattern</h3>
                   <button
                       className="text-blue-600 underline"
@@ -77,10 +78,9 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage }) => {
                     </button>
                   </div>
                   {/* You can put a chart, sliders, or interactive options here */}
-                  {/* <MonthlyEnergyChart /> */}
-                  <div className="w-full h-40 bg-gray-300 mb-8 rounded-lg border-2 flex justify-center items-center">
-                    {/* <span className="text-gray-500">Image Placeholder</span> */}
-                  </div>
+                  < DraggableAreaChart selectedUsage="Day time" />
+                  {/* <div className="w-full h-40 bg-gray-300 mb-8 rounded-lg border-2 flex justify-center items-center">
+                  </div> */}
       
                 </div>
               </div>
