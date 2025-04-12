@@ -21,6 +21,7 @@ const EnergyUsage = ({ updateData, selectedBill }) => {
   // Compute the slider maximum using the current bill input.
   const computedSliderMax = computeSliderMax(bill);
 
+  // Generate random daily consumption values for 31 days between 0 and computedSliderMax.
   const generateRandomConsumption = () => {
     // Generate 31 random numbers.
     const randomValues = Array.from({ length: 31 }, () => Math.random());
@@ -47,6 +48,12 @@ const EnergyUsage = ({ updateData, selectedBill }) => {
     updateData("bill", formatted);
   };
 
+    // When computedSliderMax changes (i.e. when the bill input changes),
+  // regenerate dailyConsumption so that their total matches the new max.
+  useEffect(() => {
+    setDailyConsumption(generateRandomConsumption());
+  }, [computedSliderMax]);
+
   const handleSliderChange = (index, value) => {
     const newConsumption = [...dailyConsumption];
     newConsumption[index] = value;
@@ -68,20 +75,18 @@ const EnergyUsage = ({ updateData, selectedBill }) => {
     weekdayCounts[idx % 7]++;
   });
 
-// Compute the average kWh per weekday (as before)
-const computeWeekdayAverages = () => {
-  const sums = Array(7).fill(0);
-  const counts = Array(7).fill(0);
-
-  dailyConsumption.forEach((value, index) => {
-    const dayOfWeek = index % 7;
-    sums[dayOfWeek] += value;
-    counts[dayOfWeek]++;
-  });
-  return sums.map((total, i) => counts[i] ? Math.round(total / counts[i]) : 0);
-};
-
-
+  const computeWeekdayAverages = () => {
+    const sums = Array(7).fill(0);
+    const counts = Array(7).fill(0);
+  
+    dailyConsumption.forEach((value, index) => {
+      const dayOfWeek = index % 7; // 0=Monday, 1=Tuesday, ..., 6=Sunday
+      sums[dayOfWeek] += value;
+      counts[dayOfWeek]++;
+    });
+  
+    return sums.map((total, i) => Math.round(total / counts[i]));
+  };
 
   const [weekdayAverages, setWeekdayAverages] = useState(computeWeekdayAverages());
   useEffect(() => {
@@ -89,14 +94,6 @@ const computeWeekdayAverages = () => {
       setWeekdayAverages(computeWeekdayAverages());
     }
   }, [showModal]);
-
-  // For each weekday, compute its maximum allowed kWh for that day.
-const weekdayMaxes = weekdayCounts.map(count => count ? computedSliderMax / count : 0);
-
-// Now, for each weekday, compute the percentage as:
-const weekdayPercentagesForDisplay = weekdayAverages.map(
-  (avg, i) => weekdayMaxes[i] ? Math.round((avg / weekdayMaxes[i]) * 100) : 0
-);
 
 // Assume computedSliderMax, dailyConsumption, setDailyConsumption, weekdayAverages, setWeekdayAverages,
 // dayLabels, and showModal are defined as in your component.
@@ -110,15 +107,24 @@ const [weekdayPercentages, setWeekdayPercentages] = useState(initialPercentages)
  * and automatically adjust the remaining days so that the total remains 100.
  */
 const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
-  // Get the current weekday percentages (assume weekdayPercentages state is used)
+  // Get the old percentages.
   const oldPercentages = [...weekdayPercentages];
   const oldValue = oldPercentages[dayIndex];
-
-  // Calculate delta and then redistribute for the other weekdays, so that the sum remains 100.
-  const totalOthersOld = oldPercentages.reduce((sum, val, idx) => idx === dayIndex ? sum : sum + val, 0);
+  // Calculate the difference.
+  const delta = newPercentage - oldValue;
+  
+  // Sum of the other days.
+  const totalOthersOld = oldPercentages.reduce(
+    (sum, val, idx) => idx === dayIndex ? sum : sum + val,
+    0
+  );
+  
+  // Copy and update the chosen day's percentage.
   const updatedPercentages = [...oldPercentages];
   updatedPercentages[dayIndex] = newPercentage;
   const remaining = 100 - newPercentage;
+  
+  // Redistribute for other days proportionally.
   if (totalOthersOld > 0) {
     for (let j = 0; j < updatedPercentages.length; j++) {
       if (j !== dayIndex) {
@@ -133,23 +139,24 @@ const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
     }
   }
   setWeekdayPercentages(updatedPercentages);
-
-  // Now, update dailyConsumption using the new percentages.
-  // For weekday j, its new average in kWh is (percentage / 100) * (computedSliderMax / count).
+  
+  // Update dailyConsumption using each weekday's allowed maximum.
   const updatedConsumption = [...dailyConsumption];
   updatedPercentages.forEach((percent, j) => {
-    const newAvgForWeekday = Math.round((percent / 100) * (computedSliderMax / weekdayCounts[j]));
-    // For every occurrence of weekday j, update the value.
+    const dayMax = weekdayCounts[j] ? computedSliderMax / weekdayCounts[j] : 0;
+    const newValueKwh = Math.round((percent / 100) * dayMax);
+    // Update every occurrence of weekday j.
     for (let i = j; i < updatedConsumption.length; i += 7) {
-      updatedConsumption[i] = newAvgForWeekday;
+      updatedConsumption[i] = newValueKwh;
     }
   });
   setDailyConsumption(updatedConsumption);
-
-  // Also update weekdayAverages accordingly.
-  setWeekdayAverages(updatedPercentages.map(
-    (percent, j) => Math.round((percent / 100) * (computedSliderMax / weekdayCounts[j]))
-  ));
+  
+  // Update weekdayAverages to reflect new values.
+  setWeekdayAverages(updatedPercentages.map((percent, j) => {
+    const dayMax = weekdayCounts[j] ? computedSliderMax / weekdayCounts[j] : 0;
+    return Math.round((percent / 100) * dayMax);
+  }));
 };
 
 
@@ -210,18 +217,23 @@ const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
           <AiOutlineClose className="text-black text-2xl" />
         </button>
       </div>
-
+      
       <p className="text-sm text-gray-500 mb-3">
-        Monthly consumption: {computedSliderMax} kWh
+        Monthly consumption: {computedSliderMax} kWh total.
       </p>
-
+      
       <div className="w-full space-y-6">
         {dayLabels.map((label, dayIndex) => {
-          // For this weekday, compute the maximum allowed (computedSliderMax / count)
-          const dayMax = weekdayCounts[dayIndex] ? Math.round(computedSliderMax / weekdayCounts[dayIndex]) : 0;
-          // Compute the current percentage for this weekday from weekdayAverages.
+          // Determine how many times this weekday appears.
+          const count = weekdayCounts[dayIndex] || 1;
+          // Compute the maximum allowed kWh for this day.
+          const dayMax = Math.round(computedSliderMax / count);
+          // Get the current average consumption for this weekday.
           const currentAvg = weekdayAverages[dayIndex] || 0;
-          const currentPercentage = dayMax ? Math.round((currentAvg / dayMax) * 100) : 0;
+          // Calculate the percentage, capped at 100.
+          const currentPercentage = dayMax
+            ? Math.min(Math.round((currentAvg / dayMax) * 100), 100)
+            : 0;
           return (
             <div key={dayIndex} className="flex flex-col gap-2 mb-3">
               <div className="flex justify-between text-sm font-medium">
@@ -235,7 +247,9 @@ const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
                 min="0"
                 max="100"
                 value={currentPercentage}
-                onChange={(e) => handleWeekdaySliderChange(dayIndex, Number(e.target.value))}
+                onChange={(e) =>
+                  handleWeekdaySliderChange(dayIndex, Number(e.target.value))
+                }
                 className="w-full bg-white"
                 style={{ accentColor: "#8884d8" }}
               />
