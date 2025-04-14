@@ -27,56 +27,49 @@ ChartJS.register(
 );
 
 // Default datasets.
-const nightTimeData = [16, 17, 17, 15, 5, 5, 4, 5, 4, 13, 15, 16];
-const dayTimeData   = [2, 2, 3, 3, 16, 16, 18, 16, 17, 4, 4, 3];
-const twentyFourSevenData = [9, 10, 9, 9, 9, 10, 10, 10, 10, 10, 11, 9];
+export const nightTimeData = [16, 17, 17, 15, 5, 5, 4, 5, 4, 13, 15, 16];
+export const dayTimeData   = [2, 2, 3, 3, 16, 16, 18, 16, 17, 4, 4, 3];
+export const twentyFourSevenData = [9, 10, 9, 9, 9, 10, 10, 10, 10, 10, 11, 9];
 
-// Time labels.
-const times = [
+export const defaultLabels = [
   '12 AM', '2 AM', '4 AM', '6 AM', '8 AM', '10 AM',
   '12 PM', '2 PM', '4 PM', '6 PM', '8 PM', '10 PM'
 ];
 
-function DailyEnergyChart({ selectedUsage, draggable = false, onDataChange }) {
-  // Helper function chooses default dataset based on selectedUsage.
-  const chooseDataset = () => {
-    if (selectedUsage === "Night time") {
-      return nightTimeData;
-    } else if (selectedUsage === "24 Hours") {
-      return twentyFourSevenData;
-    } else {
-      return dayTimeData;
-    }
-  };
+function DailyEnergyChart({ data = [], draggable = false, onDataChange }) {
+
 
   // Local state holds our chart data.
   const [chartData, setChartData] = useState({
-    labels: times,
+    labels: defaultLabels,
     datasets: [
       {
         label: 'Daily Energy Pattern',
-        data: chooseDataset(),
+        data: data,
         borderColor: '#36A2EB',
         backgroundColor: 'rgba(138,208,245,0.4)',
         borderWidth: 3,
         fill: true,
-        pointRadius: 4,
+        pointRadius: draggable ? 8 : 4,
+        pointHoverRadius: draggable ? 7 : 6,
         pointBackgroundColor: '#fff',
         pointBorderColor: '#36A2EB',
       },
     ],
   });
 
-  // If selectedUsage changes, update the dataset.
-  useEffect(() => {
-    setChartData(prev => ({
-      ...prev,
-      datasets: [{
-        ...prev.datasets[0],
-        data: chooseDataset(),
-      }],
-    }));
-  }, [selectedUsage]);
+// Update chart data if the `data` prop changes
+useEffect(() => {
+  setChartData(prev => ({
+    ...prev,
+    datasets: [{
+      ...prev.datasets[0],
+      data: data,
+      pointRadius: draggable ? 8 : 4,
+      pointHoverRadius: draggable ? 10 : 6,
+    }]
+  }));
+}, [data, draggable]);
 
   // Optional: call onDataChange whenever chartData changes.
   useEffect(() => {

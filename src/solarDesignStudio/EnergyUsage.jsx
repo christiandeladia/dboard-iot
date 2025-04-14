@@ -1,36 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { FaArrowRight } from "react-icons/fa6";
 import MonthlyEnergyChart from "./chart/MonthlyEnergyChart";
-import { AiOutlineClose } from "react-icons/ai";
-import { MdEmail } from "react-icons/md";
-import { MdTextsms } from "react-icons/md";
-import { MdCall } from "react-icons/md";
+import HelpModal from "./modals/HelpModal";
+import AdjustDailyConsumptionModal from "./modals/AdjustDailyConsumptionModal";
 
-const EnergyUsage = ({ updateData, selectedBill }) => {
+const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
   const [bill, setBill] = useState(selectedBill || "");
   const [showModal, setShowModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // New helper function to compute the slider/chart max value:
-  // It divides the bill input (after stripping commas) by 12.65 and rounds it off.
-  const computeSliderMax = (billValue) => {
+  // Calculate the slider max (kWh) based on bill and customer type
+  const computeSliderMax = useCallback((billValue) => {
     const numericBill = billValue ? Number(billValue.replace(/,/g, "")) : 10000;
-    return Math.round(numericBill / 12.65);
-  };
-
-  // Compute the slider maximum using the current bill input.
+    const rate = customerType === "Commercial" ? 10 : 12.65; // default to Residential
+    return Math.round(numericBill / rate);
+  }, [customerType]);
+  
   const computedSliderMax = computeSliderMax(bill);
 
   const generateRandomConsumption = () => {
-    // Generate 31 random numbers.
     const randomValues = Array.from({ length: 31 }, () => Math.random());
     const total = randomValues.reduce((acc, value) => acc + value, 0);
-    // Scale each random value so that the total equals computedSliderMax.
     return randomValues.map(value => Math.round((value / total) * computedSliderMax));
   };
-  
 
-  // Initialize dailyConsumption using generated random values.
   const [dailyConsumption, setDailyConsumption] = useState(generateRandomConsumption);
 
   const handleDataChange = (newData) => {
@@ -40,121 +33,168 @@ const EnergyUsage = ({ updateData, selectedBill }) => {
   const handleChange = (e) => {
     let value = e.target.value;
     const raw = value.replace(/,/g, "");
-    if (raw.length > 2 && raw.startsWith("0")) return;
-    if (!/^\d*$/.test(raw)) return;
+  
+    // Allow empty input
+    if (raw === "") {
+      setBill("");
+      updateData("bill", "");
+      return;
+    }
+  
+    // Prevent non-numeric input
+    if (!/^\d+$/.test(raw)) return;
+  
+    // Prevent leading zero if input has more than 1 digit
+    if (raw.length > 1 && raw.startsWith("0")) return;
+  
     const formatted = Number(raw).toLocaleString();
     setBill(formatted);
     updateData("bill", formatted);
   };
-
-  const handleSliderChange = (index, value) => {
-    const newConsumption = [...dailyConsumption];
-    newConsumption[index] = value;
-    setDailyConsumption(newConsumption);
-  };
-
-  const dayLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  const getWeeklyGroupedConsumption = () => {
-    const weeks = [];
-    for (let i = 0; i < 31; i += 7) {
-      weeks.push(dailyConsumption.slice(i, i + 7));
-    }
-    return weeks;
-  };
   
-  // Compute how many times each weekday occurs (0=Monday, …,6=Sunday)
-  const weekdayCounts = Array(7).fill(0);
-  dailyConsumption.forEach((_, idx) => {
-    weekdayCounts[idx % 7]++;
-  });
+  // Weekday counts based on dailyConsumption array
+  const weekdayCounts = useMemo(() => {
+    const counts = Array(7).fill(0);
+    dailyConsumption.forEach((_, idx) => {
+      counts[idx % 7]++;
+    });
+    return counts;
+  }, [dailyConsumption]);
 
-// Compute the average kWh per weekday (as before)
-const computeWeekdayAverages = () => {
-  const sums = Array(7).fill(0);
-  const counts = Array(7).fill(0);
-
-  dailyConsumption.forEach((value, index) => {
-    const dayOfWeek = index % 7;
-    sums[dayOfWeek] += value;
-    counts[dayOfWeek]++;
-  });
-  return sums.map((total, i) => counts[i] ? Math.round(total / counts[i]) : 0);
-};
-
-
+  // Compute the weekly averages (for display)
+  const computeWeekdayAverages = () => {
+    const sums = Array(7).fill(0);
+    const counts = Array(7).fill(0);
+    dailyConsumption.forEach((value, index) => {
+      const day = index % 7;
+      sums[day] += value;
+      counts[day]++;
+    });
+    return sums.map((total, i) => counts[i] ? Math.round(total / counts[i]) : 0);
+  };
 
   const [weekdayAverages, setWeekdayAverages] = useState(computeWeekdayAverages());
+
   useEffect(() => {
     if (showModal) {
       setWeekdayAverages(computeWeekdayAverages());
     }
   }, [showModal]);
 
-  // For each weekday, compute its maximum allowed kWh for that day.
-const weekdayMaxes = weekdayCounts.map(count => count ? computedSliderMax / count : 0);
+  const initialPercentages = Array(7).fill(100 / 7);
+  const [weekdayPercentages, setWeekdayPercentages] = useState(initialPercentages);
 
-// Now, for each weekday, compute the percentage as:
-const weekdayPercentagesForDisplay = weekdayAverages.map(
-  (avg, i) => weekdayMaxes[i] ? Math.round((avg / weekdayMaxes[i]) * 100) : 0
-);
+  // New state: keep track of which weekdays are locked.
+  const [lockedDays, setLockedDays] = useState(Array(7).fill(false));
 
-// Assume computedSliderMax, dailyConsumption, setDailyConsumption, weekdayAverages, setWeekdayAverages,
-// dayLabels, and showModal are defined as in your component.
+  // Function to toggle lock state for a day (0 to 6)
+  const toggleLockDay = (dayIndex) => {
+    const updatedLocks = [...lockedDays];
+    updatedLocks[dayIndex] = !updatedLocks[dayIndex];
+    setLockedDays(updatedLocks);
+  };
 
-// New state: an array of 7 percentages, one for each weekday, initialized to equal distribution.
-const initialPercentages = Array(7).fill(100 / 7);
-const [weekdayPercentages, setWeekdayPercentages] = useState(initialPercentages);
-
-/**
- * When a slider for a given day (dayIndex) is changed, update its percentage value,
- * and automatically adjust the remaining days so that the total remains 100.
- */
-const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
-  // Get the current weekday percentages (assume weekdayPercentages state is used)
-  const oldPercentages = [...weekdayPercentages];
-  const oldValue = oldPercentages[dayIndex];
-
-  // Calculate delta and then redistribute for the other weekdays, so that the sum remains 100.
-  const totalOthersOld = oldPercentages.reduce((sum, val, idx) => idx === dayIndex ? sum : sum + val, 0);
-  const updatedPercentages = [...oldPercentages];
-  updatedPercentages[dayIndex] = newPercentage;
-  const remaining = 100 - newPercentage;
-  if (totalOthersOld > 0) {
-    for (let j = 0; j < updatedPercentages.length; j++) {
-      if (j !== dayIndex) {
-        updatedPercentages[j] = (oldPercentages[j] / totalOthersOld) * remaining;
+  const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
+    // If the day is locked, ignore changes.
+    if (lockedDays[dayIndex]) return;
+  
+    const numDays = weekdayPercentages.length;
+    const oldPercentages = [...weekdayPercentages];
+  
+    // Determine which indices are locked and which are unlocked.
+    const lockedIndices = [];
+    const unlockedIndices = [];
+    for (let i = 0; i < numDays; i++) {
+      if (lockedDays[i]) {
+        lockedIndices.push(i);
+      } else {
+        unlockedIndices.push(i);
       }
     }
-  } else {
-    for (let j = 0; j < updatedPercentages.length; j++) {
-      if (j !== dayIndex) {
-        updatedPercentages[j] = 0;
+  
+    // Total percentage already fixed by locked days.
+    const lockedTotal = lockedIndices.reduce((sum, i) => sum + oldPercentages[i], 0);
+    // The unlocked sliders can only collectively use the remaining percentage.
+    const available = 100 - lockedTotal;
+  
+    // Clamp the newPercentage so that it cannot exceed what’s available.
+    const clampedNew = Math.min(newPercentage, available);
+  
+    // Prepare an object to hold new values for unlocked sliders.
+    const updatedUnlockeds = {};
+    updatedUnlockeds[dayIndex] = clampedNew;
+  
+    // Get other unlocked indices (excluding the one being changed).
+    const otherUnlocked = unlockedIndices.filter((i) => i !== dayIndex);
+    // Sum the old values for these unlocked sliders.
+    const unlockedTotalOld = otherUnlocked.reduce((sum, i) => sum + oldPercentages[i], 0);
+  
+    // Distribute the remaining available percentage among the other unlocked sliders.
+    otherUnlocked.forEach((i) => {
+      if (unlockedTotalOld > 0) {
+        updatedUnlockeds[i] = (oldPercentages[i] / unlockedTotalOld) * (available - clampedNew);
+      } else {
+        // If all other unlocked sliders were 0, split the remainder equally.
+        updatedUnlockeds[i] = (available - clampedNew) / otherUnlocked.length;
+      }
+    });
+  
+    // Build the new percentages array, preserving locked days.
+    const newPercentages = [];
+    for (let i = 0; i < numDays; i++) {
+      if (lockedDays[i]) {
+        newPercentages[i] = oldPercentages[i]; // Locked days remain unchanged.
+      } else {
+        newPercentages[i] =
+          updatedUnlockeds[i] !== undefined ? updatedUnlockeds[i] : oldPercentages[i];
       }
     }
-  }
-  setWeekdayPercentages(updatedPercentages);
-
-  // Now, update dailyConsumption using the new percentages.
-  // For weekday j, its new average in kWh is (percentage / 100) * (computedSliderMax / count).
-  const updatedConsumption = [...dailyConsumption];
-  updatedPercentages.forEach((percent, j) => {
-    const newAvgForWeekday = Math.round((percent / 100) * (computedSliderMax / weekdayCounts[j]));
-    // For every occurrence of weekday j, update the value.
-    for (let i = j; i < updatedConsumption.length; i += 7) {
-      updatedConsumption[i] = newAvgForWeekday;
+  
+    // Adjust for any rounding errors so the total sums exactly to 100.
+    const total = newPercentages.reduce((sum, val) => sum + val, 0);
+    const diff = 100 - total;
+    if (otherUnlocked.length > 0) {
+      newPercentages[otherUnlocked[0]] += diff;
+    } else {
+      newPercentages[dayIndex] += diff;
     }
-  });
-  setDailyConsumption(updatedConsumption);
-
-  // Also update weekdayAverages accordingly.
-  setWeekdayAverages(updatedPercentages.map(
-    (percent, j) => Math.round((percent / 100) * (computedSliderMax / weekdayCounts[j]))
-  ));
-};
-
-
+  
+    // (Optional) Ensure no percentage is negative.
+    for (let i = 0; i < numDays; i++) {
+      if (newPercentages[i] < 0) newPercentages[i] = 0;
+    }
+  
+    // Update state for percentages.
+    setWeekdayPercentages(newPercentages);
+  
+    // Now update daily consumption and weekday averages based on the new percentages.
+    const updatedConsumption = [...dailyConsumption];
+    newPercentages.forEach((percent, j) => {
+      const dayCount = weekdayCounts[j] || 1;
+      const dayMax = Math.round(computedSliderMax / dayCount);
+      const newAvg = Math.round((percent / 100) * dayMax);
+      for (let i = j; i < updatedConsumption.length; i += 7) {
+        updatedConsumption[i] = newAvg;
+      }
+    });
+    setDailyConsumption(updatedConsumption);
+    setWeekdayAverages(
+      newPercentages.map(
+        (percent, j) =>
+          Math.round((percent / 100) * (computedSliderMax / (weekdayCounts[j] || 1)))
+      )
+    );
+  };
   
 
+  const generateDailyConsumptionFromBill = (sliderMax) => {
+    const daily = Math.round(sliderMax / 31);
+    return Array(31).fill(daily);
+  };
+  useEffect(() => {
+    setDailyConsumption(generateDailyConsumptionFromBill(computedSliderMax));
+  }, [computedSliderMax]);
+    
   return (
     <div className="w-full max-w-10/12 relative">
       <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
@@ -162,7 +202,6 @@ const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
       </h2>
       <h2 className="text-4xl font-medium mb-8">Tell us more about your energy usage.</h2>
 
-      {/* Pass dailyConsumption and computedSliderMax to the chart */}
       <MonthlyEnergyChart 
         dailyConsumption={dailyConsumption} 
         sliderMax={computedSliderMax} 
@@ -200,98 +239,18 @@ const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
         We will use this info to determine the optimal system size for you.
       </p>
 
-      {/* Modal for adjusting daily consumption */}
-      {showModal && (
-  <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
-    <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
-      <div className="mb-6 flex justify-between">
-        <h3 className="text-lg font-bold">Adjust Monthly Consumption</h3>
-        <button onClick={() => setShowModal(false)}>
-          <AiOutlineClose className="text-black text-2xl" />
-        </button>
-      </div>
+      <AdjustDailyConsumptionModal
+        visible={showModal}
+        onClose={() => setShowModal(false)}
+        computedSliderMax={computedSliderMax}
+        weekdayAverages={weekdayAverages}
+        weekdayCounts={weekdayCounts}
+        onSliderChange={handleWeekdaySliderChange}
+        lockedDays={lockedDays}
+        toggleLockDay={toggleLockDay}
+      />
 
-      <p className="text-sm text-gray-500 mb-3">
-        Monthly consumption: {computedSliderMax} kWh
-      </p>
-
-      <div className="w-full space-y-6">
-        {dayLabels.map((label, dayIndex) => {
-          // For this weekday, compute the maximum allowed (computedSliderMax / count)
-          const dayMax = weekdayCounts[dayIndex] ? Math.round(computedSliderMax / weekdayCounts[dayIndex]) : 0;
-          // Compute the current percentage for this weekday from weekdayAverages.
-          const currentAvg = weekdayAverages[dayIndex] || 0;
-          const currentPercentage = dayMax ? Math.round((currentAvg / dayMax) * 100) : 0;
-          return (
-            <div key={dayIndex} className="flex flex-col gap-2 mb-3">
-              <div className="flex justify-between text-sm font-medium">
-                <span>{label}</span>
-                <span>
-                  {currentPercentage}% ({currentAvg} kWh)
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={currentPercentage}
-                onChange={(e) => handleWeekdaySliderChange(dayIndex, Number(e.target.value))}
-                className="w-full bg-white"
-                style={{ accentColor: "#8884d8" }}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
-
-      {showHelpModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white w-11/12 max-w-md rounded-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
-            <div className="mb-6 flex justify-between">
-              <h3 className="text-lg font-bold">Need Help Estimating?</h3>
-              <button onClick={() => setShowHelpModal(false)}>
-                <AiOutlineClose className="text-black text-2xl" />
-              </button>
-            </div>
-
-            <p className="text-gray-700 mb-6">
-              Not sure how much your electricity bill is? Would you like us to assist you via:
-            </p>
-
-            <div className="flex space-x-2 justify-center w-full">
-              {/* Email Assistance */}
-              <a href="mailto:support@example.com?subject=Assistance Needed" className="flex-1 block">
-                <button className="w-full bg-gray-100 px-4 py-2 rounded font-medium hover:bg-gray-200 transition flex items-center justify-center space-x-2">
-                  <MdEmail className="inline-block" />
-                  <span>Email</span>
-                </button>
-              </a>
-              {/* Text Me */}
-              <a href="sms:1234567890" className="flex-1 block">
-                <button className="w-full bg-gray-100 px-4 py-2 rounded font-medium hover:bg-gray-200 transition flex items-center justify-center space-x-2">
-                  <MdTextsms className="inline-block" />
-                  <span>Text</span>
-                </button>
-              </a>
-              {/* Call Me */}
-              <a href="tel:1234567890" className="flex-1 block">
-                <button className="w-full bg-gray-100 px-4 py-2 rounded font-medium hover:bg-gray-200 transition flex items-center justify-center space-x-2">
-                  <MdCall className="inline-block" />
-                  <span>Call</span>
-                </button>
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {showHelpModal && <HelpModal onClose={() => setShowHelpModal(false)} />}
     </div>
   );
 };

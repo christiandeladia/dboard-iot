@@ -48,9 +48,9 @@ const Design = () => {
   const renderStep = () => {
     switch (step) {
       case 1:
-        return <SolarProposal updateData={updateData} />;
+        return <SolarProposal updateData={updateData} selectedType={formData.type}  />;
       case 2:
-        return <EnergyUsage updateData={updateData} selectedBill={formData.bill} />
+        return <EnergyUsage updateData={updateData} selectedBill={formData.bill} customerType={formData.type}/>
       case 3:
         return <ElectricityTimeUsage updateData={updateData} selectedUsage={formData.usage} />;
       case 4:
