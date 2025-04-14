@@ -51,6 +51,10 @@ const PersonalizedProposal = ({ formData, goBack }) => {
           <strong>Electricity Bill: <span className="font-normal">₱</span></strong> {formData.bill}
         </p>
         <p>
+          <strong>Monthly Data:</strong> {formData.monthly.join(', ')}
+        </p>
+
+        <p>
           <strong>Usage Time:</strong> {formData.usage}
         </p>
         <p>

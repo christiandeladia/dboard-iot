@@ -21,20 +21,27 @@ const Design = () => {
   const [formData, setFormData] = useState({
     type: "",
     bill: "",
+    monthly: [],
     usage: "",
     installation: "",
-    address: ""
+    address: "",
+    hasUserAdjusted: false,
+    sliderMax: 0 
   });
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
   const updateData = (key, value) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-
-    // If on step 1, automatically go to step 2 after selecting Residential/Commercial
+    setFormData((prev) => {
+      const newData = { ...prev, [key]: value };
+      console.log("Updated formData:", newData);
+      return newData;
+    });
+  
     if (step === 1) {
       nextStep();
     }
   };
+  
   const handleGetContacted = () => {
     console.log("User chose to get contacted:", formData);
     alert("Our team will contact you soon!");
@@ -50,9 +57,9 @@ const Design = () => {
       case 1:
         return <SolarProposal updateData={updateData} selectedType={formData.type}  />;
       case 2:
-        return <EnergyUsage updateData={updateData} selectedBill={formData.bill} customerType={formData.type}/>
+        return <EnergyUsage updateData={updateData} selectedBill={formData.bill} customerType={formData.type} initialConsumption={formData.monthly}    hasUserAdjusted={formData.hasUserAdjusted}/>
       case 3:
-        return <ElectricityTimeUsage updateData={updateData} selectedUsage={formData.usage} />;
+        return <ElectricityTimeUsage updateData={updateData} selectedUsage={formData.usage} computedSliderMax={formData.sliderMax} />;
       case 4:
         return <SolarProject updateData={updateData} selectedInstallation={formData.installation} />;
       case 5:

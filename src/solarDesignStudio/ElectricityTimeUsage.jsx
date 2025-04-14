@@ -2,43 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from "react-icons/fa6";
 import DailyEnergyChart from "./chart/DailyEnergyChart";
 import { AiOutlineClose } from "react-icons/ai";
+// Import the generator functions instead of the constant arrays.
 import {
-  nightTimeData,
-  dayTimeData,
-  twentyFourSevenData,
+  generateNightTimeData,
+  generateDayTimeData,
+  generateTwentyFourSevenData,
 } from "./chart/DailyEnergyChart";
 
-
-const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage }) => {
+const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSliderMax }) => {
   const [selectedUsage, setSelectedUsage] = useState(propUsage || "Day time");
   const [showChartModal, setShowChartModal] = useState(false);
- 
-  const getDefaultPattern = (usage) => {
-    if (usage === "Night time") return nightTimeData;
-    if (usage === "24 Hours") return twentyFourSevenData;
-    return dayTimeData;
-  };
-  const [dailyPattern, setDailyPattern] = useState(getDefaultPattern(propUsage || "Day time"));
   
+  // Compute dailySliderMax from the monthly value (make it a whole number)
+  const dailySliderMax = Math.round(computedSliderMax / 31);
 
+  // Create a function that returns dynamic default patterns.
+  const getDefaultPattern = (usage) => {
+    if (usage === "Night time") return generateNightTimeData(dailySliderMax);
+    if (usage === "24 Hours") return generateTwentyFourSevenData(dailySliderMax);
+    return generateDayTimeData(dailySliderMax);
+  };
+
+  // Use dynamic default data if no manual pattern is provided.
+  const [dailyPattern, setDailyPattern] = useState(getDefaultPattern(propUsage || "Day time"));
+
+  // On mount, update parent's state with the usage selection.
   useEffect(() => {
     updateData("usage", selectedUsage);
   }, []);
 
-const handleUsageChange = (option) => {
-  setSelectedUsage(option);
-  updateData("usage", option);
+  const handleUsageChange = (option) => {
+    setSelectedUsage(option);
+    updateData("usage", option);
+    // Update dailyPattern dynamically based on the new selection.
+    setDailyPattern(getDefaultPattern(option));
+  };
 
-  if (option === "Night time") {
-    setDailyPattern(nightTimeData);
-  } else if (option === "24 Hours") {
-    setDailyPattern(twentyFourSevenData);
-  } else {
-    setDailyPattern(dayTimeData);
-  }
-};
-
-  // When modal chart is changed, update this state
+  // When the modal chart is changed, update the state.
   const handleChartUpdate = (newData) => {
     setDailyPattern(newData);
   
@@ -50,8 +50,8 @@ const handleUsageChange = (option) => {
   };
 
   const analyzePattern = (data) => {
-    const dayIndices = [3, 4, 5, 6, 7, 8];       // 6AM to 6PM
-    const nightIndices = [9, 10, 11, 0, 1, 2];   // 6PM to 6AM
+    const dayIndices = [3, 4, 5, 6, 7, 8];       // 6 AM to 6 PM
+    const nightIndices = [9, 10, 11, 0, 1, 2];     // 6 PM to 6 AM
   
     const daySum = dayIndices.reduce((sum, i) => sum + (data[i] || 0), 0);
     const nightSum = nightIndices.reduce((sum, i) => sum + (data[i] || 0), 0);
@@ -67,8 +67,6 @@ const handleUsageChange = (option) => {
     if (nightRatio >= 0.6) return "Night time";
     return "24 Hours";
   };
-  
-
 
   return (
     <div className="flex flex-col justify-center items-center">
@@ -86,7 +84,12 @@ const handleUsageChange = (option) => {
 
       {/* Static chart (not draggable) */}
       <div className="w-full max-w-10/12 relative mb-4">
-        <DailyEnergyChart data={dailyPattern} draggable={false} />
+        <DailyEnergyChart 
+          data={dailyPattern} 
+          draggable={false} 
+          sliderMax={computedSliderMax} 
+          usage={selectedUsage}  // Pass current usage so the chart can adjust if needed.
+        />
         <button
           onClick={() => setShowChartModal(true)}
           className="text-[0.85rem] text-blue-800 flex items-center justify-end w-full"
@@ -137,7 +140,9 @@ const handleUsageChange = (option) => {
             <DailyEnergyChart
               data={dailyPattern}
               draggable={true}
-              onDataChange={handleChartUpdate} // updates parent state
+              onDataChange={handleChartUpdate} // updates local state and eventually parent's state
+              sliderMax={computedSliderMax}
+              usage={selectedUsage}
             />
           </div>
         </>

@@ -1,67 +1,96 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from "react-icons/fa6";
 import MonthlyEnergyChart from "./chart/MonthlyEnergyChart";
 import HelpModal from "./modals/HelpModal";
 import AdjustDailyConsumptionModal from "./modals/AdjustDailyConsumptionModal";
 
-const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
+const EnergyUsage = ({ updateData, selectedBill, customerType, initialConsumption, hasUserAdjusted }) => {
   const [bill, setBill] = useState(selectedBill || "");
   const [showModal, setShowModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // Calculate the slider max (kWh) based on bill and customer type
-  const computeSliderMax = useCallback((billValue) => {
+  // Compute the slider's max value based on the bill and customer type.
+  const computeSliderMax = (billValue) => {
     const numericBill = billValue ? Number(billValue.replace(/,/g, "")) : 10000;
-    const rate = customerType === "Commercial" ? 10 : 12.65; // default to Residential
+    const rate = customerType === "Commercial" ? 10 : 12.65;
     return Math.round(numericBill / rate);
-  }, [customerType]);
-  
+  };
+
   const computedSliderMax = computeSliderMax(bill);
 
-  const generateRandomConsumption = () => {
-    const randomValues = Array.from({ length: 31 }, () => Math.random());
-    const total = randomValues.reduce((acc, value) => acc + value, 0);
-    return randomValues.map(value => Math.round((value / total) * computedSliderMax));
+  useEffect(() => {
+    // Pass computedSliderMax up to the parent using updateData.
+    updateData("sliderMax", computedSliderMax);
+  }, [computedSliderMax]);
+  
+
+  // Generate a uniform daily consumption based on computedSliderMax.
+  const generateDailyConsumptionFromBill = (sliderMax) => {
+    const daily = Math.round(sliderMax / 31);
+    return Array(31).fill(daily);
   };
 
-  const [dailyConsumption, setDailyConsumption] = useState(generateRandomConsumption);
+// On mount, use parent's adjusted consumption if available,
+  // otherwise use the default based on computedSliderMax.
+  const [dailyConsumption, setDailyConsumption] = useState(() => {
+    return (initialConsumption && Array.isArray(initialConsumption) && initialConsumption.length)
+      ? initialConsumption
+      : generateDailyConsumptionFromBill(computedSliderMax);
+  });
 
+  // When the user adjusts via the chart, update parent's state and flag.
   const handleDataChange = (newData) => {
     setDailyConsumption(newData);
+    // updateData("monthly", newData);
+    // updateData("hasUserAdjusted", true);
   };
 
-  const handleChange = (e) => {
-    let value = e.target.value;
-    const raw = value.replace(/,/g, "");
-  
-    // Allow empty input
-    if (raw === "") {
-      setBill("");
-      updateData("bill", "");
-      return;
+  useEffect(() => {
+    // console.log("useEffect triggered with computedSliderMax:", computedSliderMax);
+    // console.log("hasUserAdjusted:", hasUserAdjusted);
+    // console.log("initialConsumption:", initialConsumption);
+    // Only recalc if the user has not adjusted
+    if (!hasUserAdjusted) {
+      const defaultConsumption = generateDailyConsumptionFromBill(computedSliderMax);
+      setDailyConsumption(defaultConsumption);
+      updateData("monthly", defaultConsumption);
     }
+  }, [computedSliderMax, hasUserAdjusted]);
   
-    // Prevent non-numeric input
-    if (!/^\d+$/.test(raw)) return;
-  
-    // Prevent leading zero if input has more than 1 digit
-    if (raw.length > 1 && raw.startsWith("0")) return;
-  
-    const formatted = Number(raw).toLocaleString();
-    setBill(formatted);
-    updateData("bill", formatted);
-  };
-  
-  // Weekday counts based on dailyConsumption array
-  const weekdayCounts = useMemo(() => {
-    const counts = Array(7).fill(0);
-    dailyConsumption.forEach((_, idx) => {
-      counts[idx % 7]++;
-    });
-    return counts;
-  }, [dailyConsumption]);
 
-  // Compute the weekly averages (for display)
+
+
+ // When the bill input changes, we want to reset manual adjustments.
+ const handleChange = (e) => {
+  let value = e.target.value;
+  const raw = value.replace(/,/g, "");
+  if (raw === "") {
+    setBill("");
+    updateData("bill", "");
+    return;
+  }
+  if (!/^\d+$/.test(raw)) return;
+  if (raw.length > 1 && raw.startsWith("0")) return;
+  const formatted = Number(raw).toLocaleString();
+  setBill(formatted);
+  updateData("bill", formatted);
+
+  // Reset adjustment state when bill changes
+  const newSliderMax = computeSliderMax(formatted);
+  const defaultConsumption = generateDailyConsumptionFromBill(newSliderMax);
+  setDailyConsumption(defaultConsumption);
+  updateData("monthly", defaultConsumption);
+  updateData("hasUserAdjusted", false);
+};
+
+
+  // Calculate weekday counts.
+  const weekdayCounts = dailyConsumption.reduce((acc, _, idx) => {
+    acc[idx % 7] = (acc[idx % 7] || 0) + 1;
+    return acc;
+  }, Array(7).fill(0));
+
+  // Calculate weekday averages.
   const computeWeekdayAverages = () => {
     const sums = Array(7).fill(0);
     const counts = Array(7).fill(0);
@@ -70,11 +99,10 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
       sums[day] += value;
       counts[day]++;
     });
-    return sums.map((total, i) => counts[i] ? Math.round(total / counts[i]) : 0);
+    return sums.map((total, i) => (counts[i] ? Math.round(total / counts[i]) : 0));
   };
 
   const [weekdayAverages, setWeekdayAverages] = useState(computeWeekdayAverages());
-
   useEffect(() => {
     if (showModal) {
       setWeekdayAverages(computeWeekdayAverages());
@@ -83,11 +111,8 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
 
   const initialPercentages = Array(7).fill(100 / 7);
   const [weekdayPercentages, setWeekdayPercentages] = useState(initialPercentages);
-
-  // New state: keep track of which weekdays are locked.
   const [lockedDays, setLockedDays] = useState(Array(7).fill(false));
 
-  // Function to toggle lock state for a day (0 to 6)
   const toggleLockDay = (dayIndex) => {
     const updatedLocks = [...lockedDays];
     updatedLocks[dayIndex] = !updatedLocks[dayIndex];
@@ -95,13 +120,12 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
   };
 
   const handleWeekdaySliderChange = (dayIndex, newPercentage) => {
-    // If the day is locked, ignore changes.
-    if (lockedDays[dayIndex]) return;
-  
+    if (lockedDays[dayIndex]) return; // Do nothing if the target day is locked.
+    
     const numDays = weekdayPercentages.length;
     const oldPercentages = [...weekdayPercentages];
-  
-    // Determine which indices are locked and which are unlocked.
+    
+    // Separate indices for locked and unlocked sliders.
     const lockedIndices = [];
     const unlockedIndices = [];
     for (let i = 0; i < numDays; i++) {
@@ -111,63 +135,66 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
         unlockedIndices.push(i);
       }
     }
-  
-    // Total percentage already fixed by locked days.
+    
+    // Calculate total percentage occupied by locked sliders.
     const lockedTotal = lockedIndices.reduce((sum, i) => sum + oldPercentages[i], 0);
-    // The unlocked sliders can only collectively use the remaining percentage.
     const available = 100 - lockedTotal;
-  
-    // Clamp the newPercentage so that it cannot exceed what’s available.
+    
+    // Clamp newPercentage so that it does not exceed available percentage.
     const clampedNew = Math.min(newPercentage, available);
-  
-    // Prepare an object to hold new values for unlocked sliders.
+    
+    // Prepare an object to store updated values for unlocked sliders.
     const updatedUnlockeds = {};
+    // Set the new value for the slider being adjusted.
     updatedUnlockeds[dayIndex] = clampedNew;
-  
-    // Get other unlocked indices (excluding the one being changed).
+    
+    // For the other unlocked sliders, calculate proportionally
     const otherUnlocked = unlockedIndices.filter((i) => i !== dayIndex);
-    // Sum the old values for these unlocked sliders.
     const unlockedTotalOld = otherUnlocked.reduce((sum, i) => sum + oldPercentages[i], 0);
-  
-    // Distribute the remaining available percentage among the other unlocked sliders.
     otherUnlocked.forEach((i) => {
       if (unlockedTotalOld > 0) {
         updatedUnlockeds[i] = (oldPercentages[i] / unlockedTotalOld) * (available - clampedNew);
       } else {
-        // If all other unlocked sliders were 0, split the remainder equally.
         updatedUnlockeds[i] = (available - clampedNew) / otherUnlocked.length;
       }
     });
-  
-    // Build the new percentages array, preserving locked days.
+    
+    // Build new percentages using locked values as is and updated unlocked values.
     const newPercentages = [];
     for (let i = 0; i < numDays; i++) {
-      if (lockedDays[i]) {
-        newPercentages[i] = oldPercentages[i]; // Locked days remain unchanged.
-      } else {
-        newPercentages[i] =
-          updatedUnlockeds[i] !== undefined ? updatedUnlockeds[i] : oldPercentages[i];
-      }
+      newPercentages[i] = lockedDays[i] ? oldPercentages[i] : (updatedUnlockeds[i] !== undefined ? updatedUnlockeds[i] : oldPercentages[i]);
     }
-  
-    // Adjust for any rounding errors so the total sums exactly to 100.
+    
+    // Calculate rounding difference
     const total = newPercentages.reduce((sum, val) => sum + val, 0);
     const diff = 100 - total;
-    if (otherUnlocked.length > 0) {
-      newPercentages[otherUnlocked[0]] += diff;
+    
+    // IMPORTANT: Create a fresh array of unlocked indices for diff distribution
+    const unlockedForDiff = [];
+    for (let i = 0; i < numDays; i++) {
+      if (!lockedDays[i]) {
+        unlockedForDiff.push(i);
+      }
+    }
+    
+    // Evenly distribute the diff among unlocked sliders
+    if (unlockedForDiff.length > 0) {
+      const adjustmentPerSlider = diff / unlockedForDiff.length;
+      unlockedForDiff.forEach((i) => {
+        newPercentages[i] += adjustmentPerSlider;
+      });
     } else {
       newPercentages[dayIndex] += diff;
     }
-  
-    // (Optional) Ensure no percentage is negative.
+    
+    // Ensure no percentage falls below 0.
     for (let i = 0; i < numDays; i++) {
       if (newPercentages[i] < 0) newPercentages[i] = 0;
     }
-  
-    // Update state for percentages.
+    
+    // Update state
     setWeekdayPercentages(newPercentages);
-  
-    // Now update daily consumption and weekday averages based on the new percentages.
+    
     const updatedConsumption = [...dailyConsumption];
     newPercentages.forEach((percent, j) => {
       const dayCount = weekdayCounts[j] || 1;
@@ -178,52 +205,40 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
       }
     });
     setDailyConsumption(updatedConsumption);
-    setWeekdayAverages(
-      newPercentages.map(
-        (percent, j) =>
-          Math.round((percent / 100) * (computedSliderMax / (weekdayCounts[j] || 1)))
-      )
-    );
+    setWeekdayAverages(newPercentages.map((percent, j) =>
+      Math.round((percent / 100) * (computedSliderMax / (weekdayCounts[j] || 1)))
+    ));
+    
+    // Update parent's state.
+    updateData("monthly", updatedConsumption);
+    updateData("hasUserAdjusted", true);
   };
   
 
-  const generateDailyConsumptionFromBill = (sliderMax) => {
-    const daily = Math.round(sliderMax / 31);
-    return Array(31).fill(daily);
-  };
-  useEffect(() => {
-    setDailyConsumption(generateDailyConsumptionFromBill(computedSliderMax));
-  }, [computedSliderMax]);
-    
   return (
     <div className="w-full max-w-10/12 relative">
       <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
         Solar Design Studio
       </h2>
       <h2 className="text-4xl font-medium mb-8">Tell us more about your energy usage.</h2>
-
       <MonthlyEnergyChart 
         dailyConsumption={dailyConsumption} 
         sliderMax={computedSliderMax} 
         onDataChange={handleDataChange} 
       />
-
       <button
         onClick={() => setShowModal(true)}
         className="text-[0.85rem] text-end text-blue-800 tracking-tight mt-2 w-full flex items-center justify-end"
       >
         Adjust Monthly Consumption <FaArrowRight className="inline-block ml-1" />
       </button>
-
       <p className="mt-4 text-2xl font-medium">What is your average monthly electricity bill?</p>
-
       <button
         onClick={() => setShowHelpModal(true)}
         className="text-[0.85rem] text-end text-blue-800 tracking-tight mb-5 flex items-center underline"
       >
         Don’t know yet?
       </button>
-      
       <div className="relative w-full">
         <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-lg">₱</span>
         <input
@@ -234,11 +249,9 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
           className="pl-8 p-2 border rounded w-full"
         />
       </div>
-
       <p className="text-[0.75rem] text-gray-400 tracking-tight mb-8 mt-2 text-left w-full max-w-10/12">
         We will use this info to determine the optimal system size for you.
       </p>
-
       <AdjustDailyConsumptionModal
         visible={showModal}
         onClose={() => setShowModal(false)}
@@ -249,7 +262,6 @@ const EnergyUsage = ({ updateData, selectedBill, customerType  }) => {
         lockedDays={lockedDays}
         toggleLockDay={toggleLockDay}
       />
-
       {showHelpModal && <HelpModal onClose={() => setShowHelpModal(false)} />}
     </div>
   );
