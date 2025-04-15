@@ -23,6 +23,7 @@ const Design = () => {
     bill: "",
     monthly: [],
     usage: "",
+    electricityData: [],
     installation: "",
     address: "",
     hasUserAdjusted: false,

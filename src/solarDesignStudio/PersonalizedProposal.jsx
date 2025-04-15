@@ -58,6 +58,16 @@ const PersonalizedProposal = ({ formData, goBack }) => {
           <strong>Usage Time:</strong> {formData.usage}
         </p>
         <p>
+  <strong>Daily Data:</strong>{" "}
+  {formData.electricityData
+    .map(num =>
+      num % 1 === 0 ? num : Number(num).toFixed(1)
+    )
+    .join(", ")}
+</p>
+
+
+        <p>
           <strong>Installation Type:</strong> {formData.installation}
         </p>
         <p>

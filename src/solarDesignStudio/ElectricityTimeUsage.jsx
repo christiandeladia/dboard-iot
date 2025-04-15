@@ -12,6 +12,7 @@ import {
 const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSliderMax }) => {
   const [selectedUsage, setSelectedUsage] = useState(propUsage || "Day time");
   const [showChartModal, setShowChartModal] = useState(false);
+  const [shake, setShake] = useState(false);
   
   // Compute dailySliderMax from the monthly value (make it a whole number)
   const dailySliderMax = Math.round(computedSliderMax / 31);
@@ -29,19 +30,24 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
   // On mount, update parent's state with the usage selection.
   useEffect(() => {
     updateData("usage", selectedUsage);
+    updateData("electricityData", dailyPattern);
   }, []);
 
   const handleUsageChange = (option) => {
     setSelectedUsage(option);
     updateData("usage", option);
     // Update dailyPattern dynamically based on the new selection.
-    setDailyPattern(getDefaultPattern(option));
+    const newPattern = getDefaultPattern(option);
+    // Update local state.
+    setDailyPattern(newPattern);
+    // Also update parent's state for electricityData.
+    updateData("electricityData", newPattern);
   };
 
   // When the modal chart is changed, update the state.
   const handleChartUpdate = (newData) => {
     setDailyPattern(newData);
-  
+   updateData("electricityData", newData);
     const pattern = analyzePattern(newData);
     if (pattern !== selectedUsage) {
       setSelectedUsage(pattern);
@@ -67,6 +73,19 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
     if (nightRatio >= 0.6) return "Night time";
     return "24 Hours";
   };
+
+  // Compute the total daily consumption using the current dailyPattern.
+  const totalConsumptionRaw = dailyPattern.reduce((acc, val) => acc + val, 0);
+  const totalConsumption = totalConsumptionRaw.toFixed(1);
+
+    // Function to trigger shake animation.
+    const triggerShake = () => {
+      console.log("onMaxDrag triggered: Maximum value reached");
+      setShake(true);
+      setTimeout(() => {
+        setShake(false);
+      }, 300); // Duration should match the CSS animation duration (0.3s here)
+    };
 
   return (
     <div className="flex flex-col justify-center items-center">
@@ -137,12 +156,27 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
               </button>
             </div>
 
+            <p className="text-sm text-gray-500 mb-1 ps-6">
+              Daily consumption:{" "}
+              {totalConsumptionRaw === dailySliderMax ? (
+                <span className={`text-green-600 font-semibold inline-block ${shake ? 'shake' : ''}`}>
+                  {totalConsumption} kWh (Max)
+                </span>
+              ) : (
+                <span className="text-red-500 font-bold">{totalConsumption}</span>
+              )}
+              {totalConsumptionRaw === dailySliderMax ? "" : `/${dailySliderMax} kWh`}
+            </p>
+
+
+
             <DailyEnergyChart
               data={dailyPattern}
               draggable={true}
               onDataChange={handleChartUpdate} // updates local state and eventually parent's state
               sliderMax={computedSliderMax}
               usage={selectedUsage}
+              onMaxDrag={triggerShake}
             />
           </div>
         </>

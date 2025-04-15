@@ -112,7 +112,7 @@ export const defaultLabels = [
   '12 PM', '2 PM', '4 PM', '6 PM', '8 PM', '10 PM'
 ];
 
-function DailyEnergyChart({ data = [], draggable = false, onDataChange, sliderMax, usage = "Day time" }) {
+function DailyEnergyChart({ data = [], draggable = false, onDataChange, sliderMax, usage = "Day time", onMaxDrag  }) {
   // Convert the monthly sliderMax to a daily sliderMax (as a whole number).
   const dailySliderMax = Math.round(sliderMax / 31);
   console.log("dailySliderMax:", dailySliderMax);
@@ -173,39 +173,73 @@ useEffect(() => {
 }, [data, draggable]);
 
   // Optional: call onDataChange whenever chartData changes.
-  useEffect(() => {
-    if (onDataChange) {
-      onDataChange(chartData.datasets[0].data);
-    }
-  }, [chartData, onDataChange]);
+  // useEffect(() => {
+  //   if (onDataChange) {
+  //     onDataChange(chartData.datasets[0].data);
+  //   }
+  // }, [chartData, onDataChange]);
 
-  // Define dragData options: if draggable is true, use our configuration; otherwise, disable it.
-  const dragOptions = draggable
-    ? {
-        round: 1,
-        dragX: false, // Allow only vertical dragging.
-        onDragStart: function (e, datasetIndex, index, value) {
-          // Optional custom logic for drag start.
-        },
-        onDrag: function (e, datasetIndex, index, value) {
-          // Optional live feedback.
-        },
-        onDragEnd: function (e, datasetIndex, index, value) {
-          // Update state with the new value once dragging ends.
-          setChartData(prev => {
-            const newData = [...prev.datasets[0].data];
-            newData[index] = value;
-            return {
-              ...prev,
-              datasets: [{
-                ...prev.datasets[0],
-                data: newData,
-              }],
-            };
-          });
-        },
-      }
-    : false;
+// In your dragOptions configuration, update the onDragEnd callback:
+
+const dragOptions = draggable
+  ? {
+      round: 1,
+      dragX: false, // Allow only vertical dragging.
+      onDragStart: function (e, datasetIndex, index, value) {
+        // Optional custom logic for drag start.
+      },
+      onDrag: function (e, datasetIndex, index, value) {
+        const currentData = chartData.datasets[datasetIndex].data;
+        const sumOthers = currentData.reduce(
+          (sum, v, i) => (i === index ? sum : sum + v),
+          0
+        );
+        const maxAllowed = dailySliderMax - sumOthers;
+        // Simply clamp during dragging; do not trigger onMaxDrag here.
+        return value > maxAllowed ? maxAllowed : value;
+      },
+      onDragEnd: function (e, datasetIndex, index, value) {
+        const currentData = chartData.datasets[datasetIndex].data;
+        const sumOthers = currentData.reduce((sum, v, i) => (i === index ? sum : sum + v), 0);
+        const maxAllowed = dailySliderMax - sumOthers;
+        let newValue = value;
+        if (value > maxAllowed) {
+          newValue = maxAllowed;
+          if (typeof onMaxDrag === "function") {
+            onMaxDrag(); // Trigger shake in the parent.
+          }
+        }
+      
+        // We'll store newData in a local variable so we can later pass it to onDataChange.
+        let newData = [];
+      
+        // Update the chart data state.
+        setChartData((prev) => {
+          // Clone the current data.
+          const newDataLocal = [...prev.datasets[0].data];
+          newDataLocal[index] = newValue;
+          newData = newDataLocal; // Save it in our outer variable.
+          return {
+            ...prev,
+            datasets: [{
+              ...prev.datasets[0],
+              data: newDataLocal,
+            }],
+          };
+        });
+      
+        // Defer the onDataChange call until after rendering.
+        setTimeout(() => {
+          if (typeof onDataChange === "function") {
+            onDataChange(newData);
+          }
+        }, 0);
+      },
+      
+      
+    }
+  : false;
+
 
   // Build options – include dragData options explicitly.
   const options = {
