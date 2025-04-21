@@ -147,14 +147,14 @@ function DailyEnergyChart({ data = [], draggable = false, onDataChange, sliderMa
       {
         label: 'Daily Energy Pattern',
         data: dynamicData,
-        borderColor: '#36A2EB',
-        backgroundColor: 'rgba(138,208,245,0.4)',
+        borderColor: '#007AFF',
+        backgroundColor: 'rgba(0, 122, 255,0.5)',
         borderWidth: 3,
         fill: true,
         pointRadius: draggable ? 8 : 4,
         pointHoverRadius: draggable ? 7 : 6,
         pointBackgroundColor: '#fff',
-        pointBorderColor: '#36A2EB',
+        pointBorderColor: '#007AFF',
       },
     ],
   });

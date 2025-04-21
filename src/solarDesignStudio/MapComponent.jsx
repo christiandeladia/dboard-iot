@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import GoogleMapReact from 'google-map-react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot  } from 'firebase/firestore';
 import { db } from '../Config';
 import { RiMapPinFill } from "react-icons/ri";
 import { FaArrowRight } from "react-icons/fa6";
@@ -54,21 +54,20 @@ const MapComponent = ({ updateData, selectedAddress }) => {
   }, []);
 
   useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'pin_location'));
-        const locations = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          locations.push({ id: doc.id, ...data });
-        });
-        setPins(locations);
-      } catch (error) {
-        console.error("Error fetching locations: ", error);
-      }
-    };
-    fetchLocations();
+    const unsubscribe = onSnapshot(collection(db, 'pin_location'), (querySnapshot) => {
+      const locations = [];
+      querySnapshot.forEach((doc) => {
+        locations.push({ id: doc.id, ...doc.data() });
+      });
+      setPins(locations);
+    }, (error) => {
+      console.error("Error fetching locations: ", error);
+    });
+  
+    // Clean up listener on unmount
+    return () => unsubscribe();
   }, []);
+  
 
   useEffect(() => {
     const initializeAutocomplete = () => {
@@ -158,9 +157,9 @@ const MapComponent = ({ updateData, selectedAddress }) => {
         {/* Inner wrapper with margin creates visible gap from the border */}
         <div
           style={{
-            margin: '0.5rem', // adjust as needed for desired spacing
-            height: 'calc(100% - 1rem)', // subtract top+bottom margin
-            width: 'calc(100% - 1rem)', // subtract left+right margin
+            margin: '', // adjust as needed for desired spacing
+            height: '100%', // subtract top+bottom margin
+            width: '100%', // subtract left+right margin
             borderRadius: '11px',
             overflow: 'hidden'
           }}
@@ -174,7 +173,8 @@ const MapComponent = ({ updateData, selectedAddress }) => {
             zoom={selectedLocation ? 19 : defaultProps.zoom}
             options={{
               draggable: false,
-              mapTypeId: showDefaultMap ? 'roadmap' : 'satellite',
+              disableDefaultUI: true,
+              mapTypeId: 'roadmap',
               ...(showDefaultMap && {
                 styles: [
                   {

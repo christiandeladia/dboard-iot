@@ -56,7 +56,7 @@ const AdjustDailyConsumptionModal = ({
                     value={currentPercentage}
                     onChange={(e) => onSliderChange(dayIndex, Number(e.target.value))}
                     className="flex-grow bg-white"
-                    style={{ accentColor: "#8884d8" }}
+                    style={{ accentColor: "#007AFF" }}
                     disabled={lockedDays[dayIndex]}
                   />
                   {/* Lock toggle button as an inline block */}

@@ -31,7 +31,7 @@ function MonthlyEnergyChart({ dailyConsumption, sliderMax }) {
       {
         label: 'Daily Consumption (kWh)',
         data: dailyConsumption,
-        backgroundColor: '#8884d8',
+        backgroundColor: '#007AFF',
       },
     ],
   });
