@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaHouseChimney } from "react-icons/fa6";
 import { BsBuildingsFill } from "react-icons/bs";
+import { Container, SectionHeader, SectionMedia, SectionContent } from "./shared/Layout";
 
 const options = [
   { key: "residential", label: "Residential", Icon: FaHouseChimney },
@@ -15,7 +16,7 @@ const OptionButton = ({ option, selectedOption, onSelect }) => {
     <button
       onClick={() => onSelect(label)}
       className={`
-        border font-medium px-4 py-3 rounded-md flex-1 flex items-center justify-center
+        border font-medium px-4 py-3 rounded-md flex-1 flex items-center justify-center 
         ${isSelected ? "bg-black text-white" : "bg-white text-black"}
       `}
     >
@@ -42,45 +43,43 @@ const SolarProposal = ({ updateData, selectedType }) => {
   };
 
   return (
-<div className="w-full max-w-10/12
-                grid grid-cols-1 gap-8
-                md:grid-cols-2 md:grid-rows-2">
-  {/* 1) Heading */}
-  <div className="md:col-start-2 md:row-start-1">
-    <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15">
-      Solar Design Studio
-    </h2>
-    <h2 className="text-4xl font-medium mb-8">
-      Get a personalized solar proposal instantly
-    </h2>
-  </div>
+    <Container>
+      <SectionHeader>
+        <h2 className="text-[1.25rem] text-gray-400 font-medium mb-3 mt-15 md:mt-0 ">
+          Solar Design Studio
+        </h2>
+        <h2 className="text-4xl font-medium mb-8">
+          Get a personalized solar proposal instantly
+        </h2>
+      </SectionHeader>
 
-  {/* 2) Image */}
-  <div className="flex justify-center items-center
-                  md:col-start-1 md:row-start-1 md:row-span-2">
-    <div className="w-full h-70 bg-gray-300 rounded-lg border-2 mb-8 md:mb-0 flex justify-center items-center">
-      {/* Image Placeholder */}
-    </div>
-  </div>
+      <SectionMedia>
+        <div className="w-full h-70 lg:h-120 bg-gray-300 rounded-lg border-2 mb-8 md:mb-0" />
+      </SectionMedia>
 
-  {/* 3) Question + Buttons */}
-  <div className="md:col-start-2 md:row-start-2">
-    <p className="mt-4 text-2xl font-medium mb-8">
-      I’m looking to get solar for:
-    </p>
-    <div className="mt-2 flex space-x-4 justify-center">
-      {options.map(opt => (
-        <OptionButton
-          key={opt.key}
-          option={opt}
-          selectedOption={selectedOption}
-          onSelect={handleSelection}
-        />
-      ))}
-    </div>
-  </div>
-</div>
-
+      <SectionContent>
+        <p className="mt-4 text-2xl font-medium mb-8">
+          I’m looking to get solar for:
+        </p>
+        <div className="flex space-x-4 justify-center">
+          {options.map(opt => {
+            const isSelected = selectedOption === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => handleSelection(opt.label)}
+                className={`
+                  border font-medium px-4 py-3 rounded-md flex-1 flex items-center justify-center cursor-pointer
+                  ${isSelected ? "bg-black text-white" : "bg-white text-black"}
+                `}
+              >
+                <opt.Icon className="mr-2" /> {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      </SectionContent>
+    </Container>
   );
 };
 

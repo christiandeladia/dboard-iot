@@ -101,7 +101,7 @@ const Design = () => {
       <Navbar />
 
       {/* Main Content */}
-      <main className="flex flex-col justify-center items-center">
+      <main className="flex flex-col">
         {/* <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left w-full max-w-10/12">
           Solar Design Studio
         </h2> */}
@@ -109,10 +109,10 @@ const Design = () => {
         {renderStep()}
 
         {/* Navigation Buttons */}
-        <div className="mt-2 flex space-x-4 justify-center w-full max-w-10/12">
+        <div className="mt-2 mx-auto w-full max-w-10/12 lg:max-w-9/12 flex justify-center md:justify-end">
           {step > 1 && step < 6 && (
-            <>
-              <button onClick={prevStep} className='border border-gray-500 bg-gray-100 font-medium px-4 py-3 rounded-md flex-1'>Back</button>
+            <div className="flex space-x-4 min-w-12/12 md:min-w-6/12">
+              <button onClick={prevStep} className='border border-gray-500 bg-gray-100 font-medium px-4 py-3 rounded-md flex-1 cursor-pointer'>Back</button>
               <button
                 onClick={nextStep}
                 disabled={!isStepValid()}
@@ -124,7 +124,7 @@ const Design = () => {
               >
                 Next
               </button>
-            </>
+            </div>
           )}
           
           {/* Step 6: Get Contacted & Book Site Visit */}

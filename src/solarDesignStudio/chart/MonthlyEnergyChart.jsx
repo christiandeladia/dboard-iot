@@ -112,7 +112,7 @@ const yAxisMax = highestValue > 0 ? Math.ceil((highestValue * 1.05) / 10) * 10 :
   };
 
   return (
-    <div className="w-full h-50 flex justify-center items-center">
+    <div className="w-full h-50 md:h-70 flex justify-center items-center">
       <Bar data={chartData} options={options} />
     </div>
   );

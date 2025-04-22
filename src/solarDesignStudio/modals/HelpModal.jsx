@@ -86,11 +86,12 @@ const HelpModal = ({ onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white w-11/12 max-w-md rounded-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
+      <div className="bg-white w-11/12 max-w-md rounded-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0
+      animate-slide-up">
         <div className="mb-6 flex justify-between">
           <h3 className="text-lg font-bold">Need Help Estimating?</h3>
           <button onClick={handleClose}>
-            <AiOutlineClose className="text-black text-2xl" />
+            <AiOutlineClose className="text-black text-2xl cursor-pointer" />
           </button>
         </div>
 
@@ -103,7 +104,7 @@ const HelpModal = ({ onClose }) => {
           <div className="flex-1">
             <button
               onClick={() => toggleMethod("email")}
-              className={`w-full px-4 py-2 rounded font-medium transition flex items-center justify-center space-x-2 ${
+              className={`w-full px-4 py-2 rounded font-medium transition flex items-center justify-center space-x-2 cursor-pointer ${
                 activeMethod === "email" ? "bg-blue-100" : "bg-gray-100 hover:bg-gray-200"
               }`}
             >
@@ -116,7 +117,7 @@ const HelpModal = ({ onClose }) => {
           <div className="flex-1">
             <button 
               onClick={() => toggleMethod("text")}
-              className={`w-full px-4 py-2 rounded font-medium transition flex items-center justify-center space-x-2 ${
+              className={`w-full px-4 py-2 rounded font-medium transition flex items-center justify-center space-x-2 cursor-pointer ${
                 activeMethod === "text" ? "bg-blue-100" : "bg-gray-100 hover:bg-gray-200"
               }`}
             >

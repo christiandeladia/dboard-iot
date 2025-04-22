@@ -1,4 +1,6 @@
 import React from "react";
+import { Container, SectionHeader, SectionMedia, SectionContent } from "./shared/Layout";
+
 
 const PersonalizedProposal = ({ formData, goBack }) => {
   return (
@@ -20,12 +22,13 @@ const PersonalizedProposal = ({ formData, goBack }) => {
         </div>
         </div>
     </div>
-    <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 text-left w-full max-w-10/12">
+
+    <Container>
+      <SectionHeader>
+      <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 text-left w-full max-w-10/12">
           Solar Design Studio
         </h2>
-    <div className="w-full max-w-10/12">
-
-      <div className="flex items-center mb-4">
+        <div className="flex items-center mb-4">
         <h2 className="text-4xl font-medium">
           Your Personalized Solar Proposal
           <span className="pl-2 ">
@@ -38,12 +41,16 @@ const PersonalizedProposal = ({ formData, goBack }) => {
           </span>
         </h2>
       </div>
+      </SectionHeader>
 
-      <div className="w-full h-140 bg-gray-300 mb-8 rounded-lg border-2 flex justify-center items-center">
+<SectionMedia>
+<div className="w-full h-140 md:h-100 bg-gray-300 mb-8 rounded-lg border-2 flex justify-center items-center">
         {/* <span className="text-gray-500">Image Placeholder</span> */}
       </div>
+</SectionMedia>
 
-      <div className="pb-25">
+<SectionContent>
+<div className="pb-25">
         <p>
           <strong>Type:</strong> {formData.type}
         </p>
@@ -58,13 +65,13 @@ const PersonalizedProposal = ({ formData, goBack }) => {
           <strong>Usage Time:</strong> {formData.usage}
         </p>
         <p>
-  <strong>Daily Data:</strong>{" "}
-  {formData.electricityData
-    .map(num =>
-      num % 1 === 0 ? num : Number(num).toFixed(1)
-    )
-    .join(", ")}
-</p>
+          <strong>Daily Data:</strong>{" "}
+          {formData.electricityData
+            .map(num =>
+              num % 1 === 0 ? num : Number(num).toFixed(1)
+            )
+            .join(", ")}
+        </p>
 
 
         <p>
@@ -74,7 +81,10 @@ const PersonalizedProposal = ({ formData, goBack }) => {
           <strong>Address:</strong> {formData.address}
         </p>
       </div>
-    </div>
+</SectionContent>
+      
+
+    </Container>
     </>
   );
 };

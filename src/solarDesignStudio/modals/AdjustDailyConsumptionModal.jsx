@@ -17,12 +17,12 @@ const AdjustDailyConsumptionModal = ({
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
-      <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center md:items-center md:justify-center">
+      <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0 md:rounded-2xl md:max-w-lg animate-slide-up">
         <div className="mb-6 flex justify-between">
           <h3 className="text-lg font-bold">Adjust Monthly Consumption</h3>
           <button onClick={onClose}>
-            <AiOutlineClose className="text-black text-2xl" />
+            <AiOutlineClose className="text-black text-2xl cursor-pointer" />
           </button>
         </div>
 
@@ -55,14 +55,14 @@ const AdjustDailyConsumptionModal = ({
                     max="100"
                     value={currentPercentage}
                     onChange={(e) => onSliderChange(dayIndex, Number(e.target.value))}
-                    className="flex-grow bg-white"
+                    className="flex-grow bg-white cursor-pointer"
                     style={{ accentColor: "#007AFF" }}
                     disabled={lockedDays[dayIndex]}
                   />
                   {/* Lock toggle button as an inline block */}
                   <button
                     onClick={() => toggleLockDay(dayIndex)}
-                    className="inline-block focus:outline-none"
+                    className="inline-block focus:outline-none cursor-pointer"
                   >
                     {lockedDays[dayIndex] ? (
                       <FaLock className="text-gray-600" />

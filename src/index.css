@@ -19,4 +19,17 @@
     animation-iteration-count: infinite;
   }
   
+  @keyframes slide-up {
+    0%   { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+  }
   
+  /* Utility class you can use on your modal panel */
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out forwards;
+  }
+  
+  /* Disable it on lg+ if you want no slide there */
+  @media (min-width: 1024px) {
+    .lg\:animate-none { animation: none !important; }
+  }

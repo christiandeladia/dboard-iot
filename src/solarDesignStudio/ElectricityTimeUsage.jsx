@@ -8,6 +8,8 @@ import {
   generateDayTimeData,
   generateTwentyFourSevenData,
 } from "./chart/DailyEnergyChart";
+import { Container, SectionHeader, SectionMedia, SectionContent } from "./shared/Layout";
+
 
 const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSliderMax }) => {
   const [selectedUsage, setSelectedUsage] = useState(propUsage || "Day time");
@@ -88,38 +90,42 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
     };
 
   return (
-    <div className="flex flex-col justify-center items-center">
-      <div className="w-full max-w-10/12 relative">
-        <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
+    <Container>
+      <SectionHeader>
+        <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 md:mt-0 text-left">
           Solar Design Studio
         </h2>
-        <h2 className="text-4xl font-medium mb-8">
+        <h2 className="text-4xl font-medium mb-8 md:mb-0">
           What time you use electricity is very important.
         </h2>
-        <p className="text-[0.75rem] text-center text-gray-400 tracking-tight mt-2 mb-2 w-full">
-          You mainly use your electricity during working hours.
-        </p>
-      </div>
+      </SectionHeader>
 
       {/* Static chart (not draggable) */}
-      <div className="w-full max-w-10/12 relative mb-4">
+      <SectionMedia>
+      <p className="text-[0.75rem] text-center text-gray-400 tracking-tight mt-2 md:mt-0 mb-2 w-full">
+          You mainly use your electricity during working hours.
+        </p>
         <DailyEnergyChart 
           data={dailyPattern} 
           draggable={false} 
           sliderMax={computedSliderMax} 
           usage={selectedUsage}  // Pass current usage so the chart can adjust if needed.
         />
-        <button
-          onClick={() => setShowChartModal(true)}
-          className="text-[0.85rem] text-blue-800 flex items-center justify-end w-full"
-        >
-          Adjust Daily Energy Pattern <FaArrowRight className="inline-block ml-1" />
-        </button>
-      </div>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setShowChartModal(true)}
+            className="inline-flex items-center text-[0.85rem] text-blue-800 cursor-pointer"
+          >
+            Adjust Daily Energy Pattern
+            <FaArrowRight className="ml-1" />
+          </button>
+        </div>
+
+      </SectionMedia>
 
       {/* Usage Options */}
-      <div className="w-full max-w-10/12 relative">
-        <p className="mt-4 text-2xl font-medium mb-4">
+      <SectionContent>
+        <p className="mt-4 md:mt-0 text-2xl font-medium mb-4">
           When do you mainly use your electricity?
         </p>
         <div className="mt-2 flex space-x-2 justify-center">
@@ -137,26 +143,44 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
         <p className="text-[0.75rem] text-gray-400 tracking-tight leading-tight mb-8 mt-4 text-left w-full max-w-10/12">
           This info gives us an understanding of how much you can save with the different types of systems available.
         </p>
+      </SectionContent>
+
+
+
+{showChartModal && (
+  <div
+    className="
+      fixed inset-0 z-50
+      flex justify-center items-end
+      lg:items-center
+    "
+  >
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setShowChartModal(false)}
+    />
+
+    {/* Modal panel */}
+    <div
+      className="
+        relative
+        bg-white
+        w-full
+        rounded-t-2xl
+        lg:rounded-2xl lg:max-w-lg
+        max-h-[80vh] overflow-y-auto
+        pb-6 p-6 shadow-lg
+        animate-slide-up
+      "
+    >
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-bold">Adjust Daily Energy Pattern</h3>
+        <button onClick={() => setShowChartModal(false)}>
+          <AiOutlineClose className="text-black text-2xl cursor-pointer" />
+        </button>
       </div>
-
-      {/* Modal */}
-      {showChartModal && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setShowChartModal(false)}
-          ></div>
-
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 pb-6 rounded-t-2xl max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
-            <div className="flex justify-between items-center mb-4 p-6 pb-0">
-              <h3 className="text-lg font-bold">Adjust Daily Energy Pattern</h3>
-
-              <button onClick={() => setShowChartModal(false)}>
-                <AiOutlineClose className="text-black text-2xl" />
-              </button>
-            </div>
-
-            <p className="text-sm text-gray-500 mb-1 ps-6">
+      <p className="text-sm text-gray-500 mb-1 ps-6">
               Daily consumption:{" "}
               {totalConsumptionRaw === dailySliderMax ? (
                 <span className={`text-green-600 font-semibold inline-block ${shake ? 'shake' : ''}`}>
@@ -178,10 +202,11 @@ const ElectricityTimeUsage = ({ updateData, selectedUsage: propUsage, computedSl
               usage={selectedUsage}
               onMaxDrag={triggerShake}
             />
-          </div>
-        </>
-      )}
     </div>
+  </div>
+)}
+
+    </Container>
   );
 };
 

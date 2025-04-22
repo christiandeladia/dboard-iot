@@ -5,6 +5,7 @@ import { db } from '../Config';
 import { RiMapPinFill } from "react-icons/ri";
 import { FaArrowRight } from "react-icons/fa6";
 import { AiOutlineClose } from "react-icons/ai";
+import { Container, SectionHeader, SectionMedia, SectionContent } from "./shared/Layout";
 
 const Marker = ({ markerType }) => {
   const markerClass =
@@ -143,14 +144,17 @@ const MapComponent = ({ updateData, selectedAddress }) => {
   };
 
   return (
-    <div className="w-full max-w-10/12">
-      <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 text-left">
+    <Container>
+      <SectionHeader>
+      <h2 className="text-[1.25rem] text-gray-400 tracking-tight font-medium mb-3 mt-15 md:mt-0 text-left">
         Solar Design Studio
       </h2>
-      <h2 className="text-4xl font-medium mb-8">Tell us more about your project.</h2>
+      <h2 className="text-4xl font-medium mb-8 md:mt-0">Tell us more about your project.</h2>
+      </SectionHeader>
 
-      {/* Main Map Display – Fixed and Non-Draggable */}
-      <div
+<SectionMedia>
+{/* Main Map Display – Fixed and Non-Draggable */}
+<div
         className="relative rounded-2xl border border-gray-300 shadow-lg bg-white overflow-hidden"
         style={{ height: '300px', width: '100%' }}
       >
@@ -225,15 +229,21 @@ const MapComponent = ({ updateData, selectedAddress }) => {
 
       {/* Button to Open Draggable Modal Map */}
       {!showDefaultMap && (
-        <button
-          onClick={() => setShowMapModal(true)}
-          className="text-[0.85rem] text-end text-blue-800 tracking-tight mt-2 w-full flex items-center justify-end"
-        >
-          Navigate the Map <FaArrowRight className="inline-block ml-1" />
-        </button>
-      )}
+        <div className="w-full flex justify-end mt-2">
+          <button
+            onClick={() => setShowMapModal(true)}
+            className="inline-flex items-center text-[0.85rem] text-blue-800 tracking-tight cursor-pointer"
+          >
+            Navigate the Map
+            <FaArrowRight className="ml-1 inline-block" />
+          </button>
+        </div>
 
-      <p className="mt-4 text-2xl font-medium mb-5">Address of your project</p>
+      )}
+</SectionMedia>
+      
+<SectionContent>
+<p className="mt-4 text-2xl font-medium mb-5 md:mt-0">Address of your project</p>
       <input
         ref={inputRef}
         type="text"
@@ -244,65 +254,93 @@ const MapComponent = ({ updateData, selectedAddress }) => {
       <p className="text-[0.75rem] text-gray-400 tracking-tight mb-8 mt-2">
         We only use your address so that we can check your roof layout &amp; panel placements.
       </p>
+</SectionContent>
+     
 
-      {/* Modal with Draggable Map – Fixed at the Bottom */}
-      {showMapModal && (
-        <>
-          {/* Background overlay */}
-          <div 
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => {
-              if (selectedLocation) {
-                reverseGeocodeLatLng(selectedLocation.lat, selectedLocation.lng);
-              }
-              setShowMapModal(false);
-            }}
-          ></div>
-          {/* Bottom-fixed modal */}
-          <div className="fixed bottom-0 left-0 right-0 bg-white z-50 pb-6 rounded-t-2xl max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0">
-            <div className="flex justify-between items-center p-4">
-              <h3 className="text-lg font-bold">Navigate the Map</h3>
-              <button
-                onClick={() => {
-                  if (selectedLocation) {
-                    reverseGeocodeLatLng(selectedLocation.lat, selectedLocation.lng);
-                  }
-                  setShowMapModal(false);
-                }}
-                className="text-xl font-bold"
-              >
-                <AiOutlineClose className="text-black text-2xl" />
-              </button>
+{showMapModal && (
+  <div
+    className="
+      fixed inset-0 z-50
+      flex items-end justify-center
+
+      /* on lg+: center vertically + horizontally */
+      lg:items-center lg:justify-center
+    "
+  >
+    {/* backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => {
+        if (selectedLocation) {
+          reverseGeocodeLatLng(selectedLocation.lat, selectedLocation.lng);
+        }
+        setShowMapModal(false);
+      }}
+    />
+
+    {/* panel */}
+    <div
+      className="
+        relative
+        bg-white
+        w-full               
+        rounded-t-2xl         
+        max -h-[80vh] overflow-y-auto
+        shadow-lg
+
+        /* lg+: dialog style */
+        lg:rounded-2xl       
+        lg:min-w-3xl         
+        lg:w-auto
+        animate-slide-up       
+      "
+    >
+      <div className="flex justify-between items-center p-4">
+        <h3 className="text-lg font-bold">Navigate the Map</h3>
+        <button
+          onClick={() => {
+            if (selectedLocation) {
+              reverseGeocodeLatLng(selectedLocation.lat, selectedLocation.lng);
+            }
+            setShowMapModal(false);
+          }}
+          className="text-xl font-bold"
+        >
+          <AiOutlineClose className="text-black text-2xl cursor-pointer" />
+        </button>
+      </div>
+      <div className="p-1 w-full h-[300px] lg:h-[500px]">
+        <GoogleMapReact
+          bootstrapURLKeys={{
+            key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+            libraries: ["places"],
+          }}
+          center={selectedLocation || defaultProps.center}
+          zoom={selectedLocation ? 19 : defaultProps.zoom}
+          options={{
+            draggable: true,
+            mapTypeId: "satellite",
+          }}
+          yesIWantToUseGoogleMapApiInternals
+          onChange={({ center }) => {
+            setSelectedLocation(center);
+          }}
+        >
+          {!showDefaultMap && (
+            <div
+              className="absolute"
+              style={{ transform: "translate(-50%, -100%)" }}
+            >
+              <RiMapPinFill className="w-8 h-8 text-red-500" />
             </div>
-            <div className='p-1' style={{ height: '300px', width: '100%' }}>
-              <GoogleMapReact
-                bootstrapURLKeys={{
-                  key: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-                  libraries: ['places']
-                }}
-                center={selectedLocation || defaultProps.center}
-                zoom={selectedLocation ? 19 : defaultProps.zoom}
-                options={{
-                  draggable: true, // Allow dragging in modal map
-                  mapTypeId: 'satellite'
-                }}
-                yesIWantToUseGoogleMapApiInternals
-                onChange={({ center }) => {
-                  setSelectedLocation(center);
-                }}
-              >
-                {/* Optionally, display an overlay marker */}
-                {!showDefaultMap && (
-                  <div className="absolute" style={{ transform: "translate(-50%, -100%)" }}>
-                    <RiMapPinFill className='w-8 h-8 text-red-500' />
-                  </div>
-                )}
-              </GoogleMapReact>
-            </div>
-          </div>
-        </>
-      )}
+          )}
+        </GoogleMapReact>
+      </div>
     </div>
+  </div>
+)}
+
+    </Container>
   );
 };
 
