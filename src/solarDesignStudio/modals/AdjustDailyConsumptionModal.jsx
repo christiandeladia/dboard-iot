@@ -1,83 +1,78 @@
-import React from "react";
-import { AiOutlineClose } from "react-icons/ai";
-import { FaLock, FaLockOpen } from "react-icons/fa"; // Import lock icons
+// src/components/AdjustDailyConsumptionModal.jsx
+import React from 'react';
+import { AiOutlineClose } from 'react-icons/ai';
+import DailyEnergyChart from '../chart/DailyEnergyChart';
 
-const dayLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-const AdjustDailyConsumptionModal = ({
-  visible,
+export default function AdjustDailyConsumptionModal({
+  isOpen,
   onClose,
-  computedSliderMax,
-  weekdayAverages,
-  weekdayCounts,
-  onSliderChange,
-  lockedDays,
-  toggleLockDay,
-}) => {
-  if (!visible) return null;
+  data,
+  sliderMax,
+  usage,
+  onDataChange,
+  onMaxDrag,
+  shake,
+}) {
+  if (!isOpen) return null;
+
+  const totalRaw = data.reduce((sum, v) => sum + v, 0);
+  const formatted = totalRaw.toFixed(1);
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center md:items-center md:justify-center">
-      <div className="bg-white w-full rounded-t-2xl p-6 max-h-[80vh] overflow-y-auto shadow-lg transition-transform transform translate-y-0 md:rounded-2xl md:max-w-lg animate-slide-up">
-        <div className="mb-6 flex justify-between">
-          <h3 className="text-lg font-bold">Adjust Monthly Consumption</h3>
+    <div
+      className="
+        fixed inset-0 z-50
+        flex justify-center items-end lg:items-center
+      "
+    >
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        className="
+          relative bg-white w-full rounded-t-2xl
+          lg:rounded-2xl lg:max-w-lg
+          max-h-[80vh] overflow-y-auto
+          pb-6 p-6 shadow-lg animate-slide-up
+        "
+        onClick={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-bold">Adjust Daily Energy Pattern</h3>
           <button onClick={onClose}>
             <AiOutlineClose className="text-black text-2xl cursor-pointer" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">
-          Monthly consumption: {computedSliderMax} kWh
+        <p className="text-sm text-gray-500 mb-1 ps-6">
+          Daily consumption:{' '}
+          {totalRaw === sliderMax
+            ? (
+              <span className={`text-green-600 font-semibold inline-block ${shake ? 'shake' : ''}`}>
+                {formatted} kWh (Max)
+              </span>
+            )
+            : <span className="text-red-500 font-bold">
+                {formatted}/{sliderMax} kWh
+              </span>
+          }
         </p>
 
-        <div className="w-full space-y-6">
-          {dayLabels.map((label, dayIndex) => {
-            const dayMax = weekdayCounts[dayIndex]
-              ? Math.round(computedSliderMax / weekdayCounts[dayIndex])
-              : 0;
-            const currentAvg = weekdayAverages[dayIndex] || 0;
-            const currentPercentage = dayMax
-              ? Math.round((currentAvg / dayMax) * 100)
-              : 0;
-
-            return (
-              <div key={dayIndex} className="flex flex-col gap-2 mb-3">
-                {/* Display day label and percentage info */}
-                <div className="flex justify-between items-center text-sm font-medium">
-                  <span>{label}</span>
-                  <span>{currentPercentage}% ({currentAvg} kWh)</span>
-                </div>
-                {/* Inline block: slider and lock icon side-by-side */}
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={currentPercentage}
-                    onChange={(e) => onSliderChange(dayIndex, Number(e.target.value))}
-                    className="flex-grow bg-white cursor-pointer"
-                    style={{ accentColor: "#007AFF" }}
-                    disabled={lockedDays[dayIndex]}
-                  />
-                  {/* Lock toggle button as an inline block */}
-                  <button
-                    onClick={() => toggleLockDay(dayIndex)}
-                    className="inline-block focus:outline-none cursor-pointer"
-                  >
-                    {lockedDays[dayIndex] ? (
-                      <FaLock className="text-gray-600" />
-                    ) : (
-                      <FaLockOpen className="text-gray-300" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <DailyEnergyChart
+          data={data}
+          draggable
+          onDataChange={onDataChange}
+          sliderMax={sliderMax}
+          usage={usage}
+          onMaxDrag={onMaxDrag}
+        />
       </div>
     </div>
   );
-};
-
-export default AdjustDailyConsumptionModal;
+}

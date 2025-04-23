@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaArrowRight } from "react-icons/fa6";
 import MonthlyEnergyChart from "./chart/MonthlyEnergyChart";
 import HelpModal from "./modals/HelpModal";
-import AdjustDailyConsumptionModal from "./modals/AdjustDailyConsumptionModal";
+import AdjustMonthlyConsumptionModal from "./modals/AdjustMonthlyConsumptionModal";
 import { Container, SectionHeader, SectionMedia, SectionContent } from "./shared/Layout";
 
 const EnergyUsage = ({ updateData, selectedBill, customerType, initialConsumption, hasUserAdjusted }) => {
@@ -271,7 +271,7 @@ const EnergyUsage = ({ updateData, selectedBill, customerType, initialConsumptio
         </p>
       </SectionContent>
 
-      <AdjustDailyConsumptionModal
+      <AdjustMonthlyConsumptionModal
         visible={showModal}
         onClose={() => setShowModal(false)}
         computedSliderMax={computedSliderMax}

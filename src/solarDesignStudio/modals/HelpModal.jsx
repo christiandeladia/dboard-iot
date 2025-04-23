@@ -36,13 +36,58 @@ const HelpModal = ({ onClose }) => {
     return false;
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
+    if (!isValidInput()) return;
     setSendStatus("sending");
-    // Simulate async operation (e.g., a network request)
-    setTimeout(() => {
+  
+    // 1) Build your payload object
+    const now = new Date();
+    const timestamp = now.toLocaleString("en-PH", {
+      year:   "numeric",
+      month:  "long",
+      day:    "numeric",
+      hour:   "2-digit",
+      minute: "2-digit",
+    });
+  
+    const payload = {
+      type:      activeMethod === "email" ? "EMAIL" : "TEXT",
+      timestamp: timestamp,
+      contact:   contactValue.trim(),
+      help: timestamp,
+    };
+  
+    // 2) Stringify with nice indentation
+    const jsonString = JSON.stringify(payload, null, 2);
+  
+    // 3) Wrap in a Markdown code block so it shows as JSON
+    const text = ["```json", jsonString, "```"].join("\n");
+  
+    try {
+      const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+      const chatId   = import.meta.env.VITE_TELEGRAM_CHAT_ID;
+      const res = await fetch(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id:    chatId,
+            text:       text,
+            parse_mode: "Markdown",
+          }),
+        }
+      );
+      if (!res.ok) throw new Error(await res.text());
       setSendStatus("sent");
-    }, 2000);
+    } catch (err) {
+      console.error("Telegram error:", err);
+      setSendStatus("idle");
+      alert("Failed to send—check console for details.");
+    }
   };
+  
+  
 
   const handleClose = () => {
     // Reset local state and then close the modal.
@@ -57,7 +102,7 @@ const HelpModal = ({ onClose }) => {
     const bgClass = !contactValue.trim()
       ? "bg-blue-300"
       : sendStatus === "idle"
-      ? "bg-blue-500"
+      ? "bg-blue-500 cursor-pointer"
       : "bg-blue-200";
     return (
       <button 
